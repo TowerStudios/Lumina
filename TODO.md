@@ -1,164 +1,138 @@
-# Lumina 未完成需求清单
+# Lumina 开发计划
 
-> 作者：MarkCKB
-> 更新日期：2026-08-02
-> 项目目录：D:/Lumina
-> 参考源码：./reference/WeFlow-5.1.0（WeFlow 业务逻辑）、./reference/Lumina（最新源码快照）
-
----
-
-## 0. 当前已知问题（优先修复）
-
-### 0.1 聊天 UI 无法正常显示
-- **现象**：启动后聊天模块空白或报错
-- **可能原因**：
-  1. `electronAPI.chat.getSessions` 返回空数组（数据库未连接 / IPC 未真正注册到主进程）
-  2. `ipcHandlers.ts` 中的 `chatService` / `wcdbService` 依赖未正确初始化
-  3. `config.get('myWxid')` 返回 null（账号数据未迁移生效）
-- **排查步骤**：
-  1. 打开 DevTools (Ctrl+Shift+I) 查看 console 报错
-  2. 在主进程 `ipcHandlers.ts` 的 `chat:getSessions` 中加 `console.log` 确认是否被调用
-  3. 检查 `wcdb:open` 是否被前端调用过（若未调用，说明 onboarding 流程未走通）
-- **临时方案**：若数据库未连接，ChatList 应显示「请在设置中连接微信数据库」空状态
-
-### 0.2 Onboarding 流程缺失
-- **缺失**：没有"添加账号"向导，用户无法走通「选数据库路径 → 输入密钥 → 连接」流程
-- **需要**：新建 `OnboardingPage.tsx`，调用 `electronAPI.dbpath.autoDetect` + `wcdb.open`
-- **参考**：WeFlow 的 Onboarding 实现（见 `reference/WeFlow-5.1.0`）
+> 项目地址：https://github.com/TowerStudios/Lumina.git
+> 设计参照：Telegram Desktop (G:\tdesktop-dev) + WeFlow 业务逻辑
+> 更新日期：2026-08-03
 
 ---
 
-## 1. IPC 层 - 未注册的业务模块
+## 0. 已完成 ✅
 
-以下 IPC 在 WeFlow 中已实现，Lumina 未注册（`electron/ipcHandlers.ts`）：
-
-### 1.1 账号与认证 (auth)
-- `auth:hello` - 验证主密码
-- `auth:verifyEnabled` - 是否启用锁
-- `auth:unlock` - 解锁
-- `auth:enableLock` / `auth:disableLock` - 启用/关闭锁
-- `auth:changePassword` - 修改密码
-- `auth:setHelloSecret` / `auth:clearHelloSecret`
-- `auth:isLockMode`
-
-### 1.2 AI 服务 (ai)
-- `aiChat:send` - 发送消息给 AI（流式响应）
-- `aiChat:stop` - 中止生成
-- `insight:generate` - 生成洞察
-- `insight:list` / `insight:get` / `insight:delete` - 洞察记录管理
-- `insight:profile:generate` / `insight:profile:status` - 人物画像
-- `analytics:get` - 数据分析
-- `groupSummary:generate` / `groupSummary:list` - 群聊总结
-- **参考**：WeFlow `aiChatService.ts` / `insightService.ts`
-
-### 1.3 备份与导出 (backup / export)
-- `backup:create` / `backup:restore` / `backup:cancel`
-- `exportContact:export` - 导出联系人
-- `exportRecord:list` / `exportRecord:delete`
-- `exportTask:start` / `exportTask:cancel` / `exportTask:status`
-
-### 1.4 朋友圈 (sns)
-- `sns:getFeed` / `sns:getDetail`
-- `sns:getComments` / `sns:getLikes`
-- `sns:blockUser` / `sns:unblockUser` / `sns:getBlockedUsers`
-
-### 1.5 通知与日志 (notification / log / diagnostics)
-- `notification:show` / `notification:close` / `notification:click`
-- `log:read` / `log:clear` / `log:debug`
-- `diagnostics:getExportCardLogs`
-
-### 1.6 应用功能 (app)
-- `app:getLaunchAtStartupStatus` / `app:setLaunchAtStartup` - 开机自启
-- `app:checkForUpdates` / `app:downloadAndInstall` / `app:ignoreUpdate` - 自动更新
-- `app:onDownloadProgress` / `app:onUpdateAvailable`
-
-### 1.7 媒体处理
-- `voice:transcribe` - 语音转文字
-- `video:decode` - 视频解码
-- `image:decrypt` - 图片解密（dat → jpg/png）
-- `emoji:get` - 表情包获取
-
-### 1.8 社交 (social)
-- `social:validateWeiboUid`
-- `social:saveWeiboCookie`
+- [x] WCDB 数据库解密与连接（DLL 补丁绕过网络授权，wcdb_init 返回 0）
+- [x] 微信密钥自动获取（koffi FFI + Hook 机制，提示文案明确"退出并重新登录"）
+- [x] 数据库目录自动检测（扫描 C/D/E/F/G 盘所有 Documents 子目录）
+- [x] 会话列表加载（300+ 会话，7578 个联系人）
+- [x] Telegram 风格 UI 设计与配色
+- [x] ErrorBoundary 错误边界保护（防止单组件错误导致整体崩溃）
+- [x] ChatList 无限循环修复（useRef 防重复加载 + contextMenu 独立状态变量）
+- [x] ChatView 空会话无限重载修复（loadedSessionsRef 跟踪）
+- [x] 上拉加载更多历史消息（滚动位置保持 + 加载指示器）
+- [x] 完整日志系统（主进程 + WCDB，同步写入文件）
+- [x] 头像显示修复（HTTP→HTTPS 升级 + CSP 允许 http/https）
+- [x] Onboarding 流程（数据库路径选择 + 密钥输入 + 连接测试）
+- [x] 代码已上传 GitHub
 
 ---
 
-## 2. 渲染层 - 未对接的页面
+## 1. 高优先级 - 代码质量与稳定性
 
-### 2.1 侧栏导航对应的页面（目前多为 PlaceholderPage）
-- [ ] **ContactsPage** - 通讯录（参考 WeFlow）
-- [ ] **SnsPage** - 朋友圈（参考 WeFlow，含屏蔽用户功能）
-- [ ] **AiChatPage** - AI 对话（参考 WeFlow aiChatService）
-- [ ] **AnalyticsPage** - 数据分析（图表用 echarts-for-react）
-- [ ] **ExportPage** - 导出中心
+### 1.1 同步 electron.d.ts 类型声明
+- [ ] 添加 `key` 命名空间（autoGetDbKey / autoGetImageKey / onDbKeyStatus / onImageKeyStatus）
+- [ ] 修正 `dbpath.autoDetect` 返回类型为 `{ success, path?, error? }`
+- [ ] 修正 `chat.getSessions / getMessages` 返回包裹结构类型
+- [ ] 添加 `app.getLogPath` 声明
+- [ ] 删除与 preload.ts 重复的全局声明，统一以 `preload.ts` 的 `typeof electronAPI` 为唯一类型来源
 
-### 2.2 SettingsPage 业务字段对接
-- [ ] 数据库路径选择（调用 `dbpath.autoDetect` + `dbpath.scanWxids`）
-- [ ] 密钥输入与连接测试（调用 `wcdb.testConnection` + `wcdb.open`）
-- [ ] 账号切换
-- [ ] AI 配置（DeepSeek API Key、baseUrl、model）
-- [ ] 应用锁设置
-- [ ] 开机自启
-- [ ] 检查更新
+### 1.2 SettingsPage 业务字段对接
+- [ ] 显示当前解密密钥（脱敏展示，支持修改）
+- [ ] 添加"测试连接"按钮（调用 `wcdb.testConnection`）
+- [ ] 支持数据库路径手动编辑（不只能通过 Onboarding 重走流程）
+- [ ] 实现应用锁设置（密码锁 + Windows Hello）
+- [ ] 实现多账号管理（扫描/切换/删除账号）
+- [ ] 实现数据与缓存管理（缓存清理、数据备份）
 
-### 2.3 ChatModule 高级功能
-- [ ] **消息搜索** - 调用 `chat.searchMessages`
-- [ ] **无限滚动** - 使用 Virtuoso 加载更早消息（`loadMoreMessages` 已封装）
-- [ ] **消息右键菜单** - 复制、转发、引用、删除
-- [ ] **精准选消息** - 拖拽框选（参考 user_profile 偏好）
-- [ ] **图片/视频/语音预览** - 调用解密 IPC
-- [ ] **撤回消息显示** - 已实现基础，需测试真实数据
-- [ ] **引用消息** - `quotedContent` 字段渲染
-- [ ] **@提及** - 群聊消息中的高亮
-- [ ] **文件/链接/名片/位置/转账等特殊消息** - 按 `type` 渲染卡片
+---
 
-### 2.4 ChatDetailPanel
+## 2. 中优先级 - 聊天功能增强
+
+### 2.1 消息搜索
+- [ ] 调用 `chat.searchMessages` 实现全局/会话内搜索
+- [ ] 搜索结果高亮关键词
+- [ ] 点击搜索结果跳转到对应消息位置
+
+### 2.2 会话右键菜单功能对接
+- [ ] 置顶/取消置顶（持久化到后端，不仅是前端状态）
+- [ ] 标记已读/未读
+- [ ] 静音/取消静音
+- [ ] 归档/取消归档
+- [ ] 清空聊天记录
+- [ ] 删除会话
+- [ ] 查看资料
+
+### 2.3 媒体消息预览
+- [ ] 图片消息解密与预览（调用 `image:decrypt` IPC，dat → jpg/png）
+- [ ] 视频消息解码与预览（调用 `video:decode`）
+- [ ] 语音消息转文字（调用 `voice:transcribe`）
+- [ ] 文件消息下载与打开
+- [ ] 表情包获取与显示（调用 `emoji:get`）
+
+### 2.4 特殊消息类型渲染
+- [ ] 引用消息（quotedContent 字段渲染）
+- [ ] @提及高亮（群聊消息）
+- [ ] 文件/链接/名片/位置/转账等卡片式渲染
+- [ ] 撤回消息显示（已实现基础，需测试真实数据）
+- [ ] 转发消息层级展示
+
+---
+
+## 3. 中优先级 - 核心模块注册
+
+### 3.1 IPC 模块注册（electron/ipcHandlers.ts）
+- [ ] AI 服务（aiChat:send/stop, insight:generate/list/get/delete, analytics:get, groupSummary:generate/list）
+- [ ] 备份与导出（backup:create/restore/cancel, exportContact:export, exportTask:start/cancel/status）
+- [ ] 朋友圈（sns:getFeed/getDetail/getComments/getLikes, sns:blockUser/unblockUser/getBlockedUsers）
+- [ ] 通知与日志（notification:show/close/click, log:read/clear/debug）
+- [ ] 应用功能（app:getLaunchAtStartupStatus/setLaunchAtStartup, app:checkForUpdates/downloadAndInstall）
+- [ ] 媒体处理（voice:transcribe, video:decode, image:decrypt, emoji:get）
+- [ ] 认证（auth:hello/verifyEnabled/unlock/enableLock/disableLock/changePassword）
+
+### 3.2 页面实现
+- [ ] ContactsPage - 通讯录（参考 WeFlow）
+- [ ] SnsPage - 朋友圈（含屏蔽用户功能）
+- [ ] AiChatPage - AI 对话
+- [ ] AnalyticsPage - 数据分析（echarts-for-react）
+- [ ] ExportPage - 导出中心
+
+---
+
+## 4. 低优先级 - UI/UX 优化
+
+### 4.1 ChatDetailPanel
 - [ ] 联系人资料展示（头像、昵称、微信号、地区、备注）
-- [ ] 共同群聊
-- [ ] 消息统计
+- [ ] 共同群聊列表
+- [ ] 消息统计（总数、时段分布、类型分布）
 
----
-
-## 3. UI/UX 细节优化
-
-### 3.1 TG 风格聊天视图
+### 4.2 TG 风格细节
 - [ ] 验证气泡圆角组合在真实数据下的效果
-- [ ] 时间嵌入气泡右下角的 float 布局在不同消息长度下的稳定性
+- [ ] 时间嵌入气泡右下角的 float 布局稳定性
 - [ ] 长文本换行处理（避免时间被挤到下一行）
-- [ ] 图片/视频消息应铺满气泡（去掉内边距）
+- [ ] 图片/视频消息铺满气泡（去掉内边距）
 - [ ] 选中消息高亮样式
-- [ ] 多选消息时的 UI（参考 user_profile：高亮代替复选框）
+- [ ] 多选消息 UI（高亮代替复选框）
 
-### 3.2 窗口与布局
+### 4.3 窗口与布局
 - [ ] 透明窗口圆角在 Windows 11 下的表现
-- [ ] 最大化时圆角移除（已实现，需验证）
-- [ ] 1/2/3 栏自适应切换动画（参考 TG）
+- [ ] 最大化时圆角移除验证
+- [ ] 1/2/3 栏自适应切换动画
 - [ ] 会话列表拖宽过渡动画
 
-### 3.3 右键菜单
-- [ ] 会话右键菜单功能对接（置顶/已读/静音/归档/清空/删除/查看资料）
-- [ ] 目前仅前端状态变更，未持久化到后端
-
-### 3.4 主题
+### 4.4 主题
 - [ ] TG 风格浅色/深色主题验证
 - [ ] 跟随系统主题切换
 - [ ] 液态玻璃效果（@markckb/electron-liquid-glass）集成
 
 ---
 
-## 4. 数据层与工程
+## 5. 数据层与工程
 
-- [ ] **配置文件迁移验证** - `Lumina-config.json` 中 `safe:` 加密字段能否被 `ConfigService` 正确解密
-- [ ] **ChatSession.isPinned 持久化** - 目前仅前端 useState，需后端支持
-- [ ] **ChatSession.isMuted/isArchived 持久化**
-- [ ] **消息状态同步** - 历史消息默认 read，新消息需有 sending/sent/read 流程
-- [ ] **mockChatData.ts 清理** - 确认无引用后删除
-- [ ] **ChatListContextMenu** - 确认状态变更正确反映到 UI
+- [ ] 配置文件迁移验证（Lumina-config.json 中 safe: 加密字段解密）
+- [ ] ChatSession.isPinned/isMuted/isArchived 持久化到后端
+- [ ] 消息状态同步（sending/sent/read 流程）
+- [ ] mockChatData.ts 清理（确认无引用后删除）
 
 ---
 
-## 5. 打包与发布
+## 6. 打包与发布
 
 - [ ] Windows NSIS 安装包测试
 - [ ] 应用图标（public/icon.ico）
@@ -167,21 +141,28 @@
 
 ---
 
-## 6. 开发环境注意事项
+## 7. 工程约束（必须遵守）
 
-- **Node**: v22.23.2（C:/Users/MarkCKB/AppData/Roaming/fnm/node-versions/v22.23.2/installation），需显式设 PATH
-- **Electron 镜像**: `npm install` 设 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`
-- **启动**: `npm run electron:dev`（桌面端），`npm run dev`（仅网页）
-- **-webkit-app-region 改动需重启 Electron**（HMR 不生效）
-- **D:/Lumina 在工作目录外**，直接 Write/Edit 可能被沙箱拒绝，需用 .NET `[IO.File]::WriteAllText` 绕过
-- **GitHub**: https://github.com/TowerStudios/Lumina.git
+- **Node.js**: v22.23.2（koffi FFI 兼容，v24 有 ABI 不兼容）
+- **koffi**: 2.16.3（3.x 在 Windows 有 segfault 回归）
+- **VC++ 运行时**: msvcp140.dll, vcruntime140.dll 必须在 electron/dist、wx_key.dll 目录、resources/runtime/win32/
+- **日志路径**: C:\Users\Administrator\AppData\Roaming\Lumina\logs\main-YYYY-MM-DD.log
+- **CSP img-src**: 必须包含 'https:' 和 'http:'（wx.qlogo.cn 可能用 http）
+- **HTTP 头像**: 必须在 parseGlobalConfig 中自动升级为 HTTPS
+- **wcdbWorker.ts**: 必须配置为独立 Vite entry，生成 dist-electron/wcdbWorker.js
+- **Hook 提示文案**: 必须明确"退出微信并重新登录"（不是"登录微信"）
+- **数据库自动检测**: 必须扫描所有盘符根目录（C/D/E/F/G）及其 Documents 子目录
+- **IPC 处理器**: 关键服务必须包含进度状态更新（如 key:dbKeyStatus）
+- **错误消息**: 必须区分实际登录状态和 Hook 时机限制
 
 ---
 
-## 7. 下次开发优先级建议
+## 8. 开发优先级建议
 
-1. **修复 UI 显示问题**（见 0.1）- 先看 DevTools console 报错
-2. **实现 Onboarding**（见 0.2）- 让用户能连接数据库
-3. **注册核心 IPC**（见 1.1-1.4）- 让渲染层能调用真实业务
-4. **对接 SettingsPage**（见 2.2）- 完成数据库连接 UI
-5. **验证聊天 UI** - 真实数据下的 TG 风格排版
+1. **同步 electron.d.ts**（见 1.1）- 类型安全是后续开发的基础
+2. **SettingsPage 业务字段**（见 1.2）- 完善设置页功能
+3. **消息搜索**（见 2.1）- 高频使用功能
+4. **会话右键菜单持久化**（见 2.2）- 当前仅前端状态
+5. **媒体消息预览**（见 2.3）- 提升查看体验
+6. **核心 IPC 注册**（见 3.1）- 解锁更多页面
+7. **页面实现**（见 3.2）- 通讯录、朋友圈等
