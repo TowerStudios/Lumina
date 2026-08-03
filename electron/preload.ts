@@ -138,7 +138,9 @@ const electronAPI = {
         offset,
         beginTimestamp,
         endTimestamp
-      )
+      ),
+    getImageData: (sessionId: string, msgId: string) =>
+      ipcRenderer.invoke('chat:getImageData', sessionId, msgId)
   },
 
   // 系统对话框

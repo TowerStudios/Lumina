@@ -204,6 +204,15 @@ export function registerBusinessIpcHandlers(): void {
     return chatService.searchMessages(keyword, sessionId, limit, offset, beginTimestamp, endTimestamp)
   })
 
+  // 解密并返回单条图片消息的 base64 数据（用于图片预览）
+  ipcMain.handle('chat:getImageData', async (_event, sessionId: string, msgId: string) => {
+    try {
+      return await chatService.getImageData(sessionId, msgId)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
   // === 对话框 ===
   ipcMain.handle('dialog:openFile', async (_event, options?: Electron.OpenDialogOptions) => {
     return dialog.showOpenDialog(options || {})

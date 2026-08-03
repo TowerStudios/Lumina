@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ChevronLeft,
   MoreVertical,
@@ -7,6 +7,9 @@ import {
   Check,
   Clock,
   Loader2,
+  ImageIcon,
+  AlertCircle,
+  X,
 } from 'lucide-react'
 import { useUIStore } from '@/stores/uiStore'
 import { useChatStore } from '@/stores/chatStore'
@@ -350,17 +353,114 @@ function MessageRow({
   )
 }
 
+// === 图片消息：懒加载解密 + 点击放大预览 ===
+function ImageMessage({ message }: { message: RenderMessage }) {
+  const [state, setState] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle')
+  const [src, setSrc] = useState<string>('')
+  const [errorMsg, setErrorMsg] = useState<string>('')
+  const [lightbox, setLightbox] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const loadedRef = useRef(false)
+
+  // IntersectionObserver 懒加载：图片进入视口时才调用解密 IPC
+  useEffect(() => {
+    if (loadedRef.current || state === 'loaded') return
+    const el = containerRef.current
+    if (!el) return
+    // 已经在视口内则直接加载
+    const rect = el.getBoundingClientRect()
+    const inView = rect.top < window.innerHeight && rect.bottom > 0
+    if (inView) {
+      loadedRef.current = true
+      void loadImage()
+      return
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadedRef.current = true
+          void loadImage()
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const loadImage = async () => {
+    if (!message.localId || !message.sessionId) {
+      setState('error')
+      setErrorMsg('缺少消息定位信息')
+      return
+    }
+    setState('loading')
+    try {
+      const result = await window.electronAPI?.chat?.getImageData(
+        message.sessionId,
+        String(message.localId)
+      )
+      if (result?.success && result.data) {
+        setSrc(`data:image/jpeg;base64,${result.data}`)
+        setState('loaded')
+      } else {
+        setState('error')
+        setErrorMsg(result?.error || '解密失败')
+      }
+    } catch (e) {
+      setState('error')
+      setErrorMsg(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  return (
+    <>
+      <div
+        className="message-item__image"
+        ref={containerRef}
+        onClick={() => state === 'loaded' && setLightbox(true)}
+      >
+        {state === 'idle' && (
+          <div className="message-item__image-placeholder">
+            <ImageIcon size={28} />
+          </div>
+        )}
+        {state === 'loading' && (
+          <div className="message-item__image-placeholder">
+            <Loader2 size={24} className="message-item__image-spinner" />
+          </div>
+        )}
+        {state === 'error' && (
+          <div className="message-item__image-placeholder message-item__image-placeholder--error">
+            <AlertCircle size={20} />
+            <span>[图片] {errorMsg}</span>
+          </div>
+        )}
+        {state === 'loaded' && (
+          <img className="message-item__image-img" src={src} alt="[图片]" loading="lazy" />
+        )}
+      </div>
+      {lightbox && src && (
+        <div className="message-item__lightbox" onClick={() => setLightbox(false)}>
+          <img className="message-item__lightbox-img" src={src} alt="[图片]" />
+          <button className="message-item__lightbox-close" aria-label="关闭">
+            <X size={20} />
+          </button>
+        </div>
+      )}
+    </>
+  )
+}
+
 // === 消息内容（按类型渲染）===
 function MessageContent({ message }: { message: RenderMessage }) {
   switch (message.type) {
     case 'text':
       return <span className="message-item__text">{message.content}</span>
     case 'image':
-      return (
-        <div className="message-item__placeholder message-item__placeholder--media">
-          <span>[图片]</span>
-        </div>
-      )
+      return <ImageMessage message={message} />
     case 'voice':
       return (
         <div className="message-item__voice">

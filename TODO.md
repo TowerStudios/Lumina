@@ -60,7 +60,7 @@
 - [x] 查看资料（打开详情面板）
 
 ### 2.3 媒体消息预览
-- [ ] 图片消息解密与预览（调用 `image:decrypt` IPC，dat → jpg/png）
+- [x] 图片消息解密与预览（注册 chat:getImageData IPC，IntersectionObserver 懒加载，点击放大 lightbox）
 - [ ] 视频消息解码与预览（调用 `video:decode`）
 - [ ] 语音消息转文字（调用 `voice:transcribe`）
 - [ ] 文件消息下载与打开

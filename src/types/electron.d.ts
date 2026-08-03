@@ -75,6 +75,13 @@ export interface SearchMessagesResult {
   error?: string
 }
 
+export interface ImageDataResult {
+  success: boolean
+  /** base64 编码的图片数据（不含 data: 前缀） */
+  data?: string
+  error?: string
+}
+
 export interface ElectronAPI {
   // 应用信息
   app: {
@@ -164,6 +171,7 @@ export interface ElectronAPI {
       beginTimestamp?: number,
       endTimestamp?: number
     ) => Promise<SearchMessagesResult>
+    getImageData: (sessionId: string, msgId: string) => Promise<ImageDataResult>
   }
 
   // 系统对话框

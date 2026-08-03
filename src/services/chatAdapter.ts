@@ -119,6 +119,8 @@ export interface RenderMessage {
   // 引用消息（便于后续渲染引用气泡）
   quotedContent?: string
   quotedSender?: string
+  // 原始 localId（用于图片解密等需要定位原始消息的 IPC 调用）
+  localId?: number
 }
 
 // ---------------- 工具函数 ----------------
@@ -323,6 +325,7 @@ export function adaptMessage(
     avatarUrl: undefined, // 由调用方按需补充
     quotedContent: backend.quotedContent,
     quotedSender: backend.quotedSender,
+    localId: Number(backend.localId) || undefined,
   }
 }
 

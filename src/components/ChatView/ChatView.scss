@@ -420,6 +420,90 @@ $msg-radius-small: 6px;
     }
   }
 
+  // === 图片消息 ===
+  &__image {
+    cursor: pointer;
+    max-width: 280px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-secondary);
+    line-height: 0;
+  }
+
+  &__image-img {
+    display: block;
+    max-width: 100%;
+    max-height: 320px;
+    object-fit: contain;
+    border-radius: var(--radius-md);
+  }
+
+  &__image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 200px;
+    min-height: 150px;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+    line-height: 1.4;
+    text-align: center;
+    padding: 12px;
+
+    &--error {
+      color: var(--danger, #d84d4d);
+    }
+  }
+
+  &__image-spinner {
+    animation: lumina-spin 1s linear infinite;
+  }
+
+  // === 图片放大预览（全屏） ===
+  &__lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.92);
+    cursor: zoom-out;
+    animation: lumina-fade-in 0.15s ease;
+  }
+
+  &__lightbox-img {
+    max-width: 92vw;
+    max-height: 92vh;
+    object-fit: contain;
+    border-radius: 4px;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  &__lightbox-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.28);
+    }
+  }
+
   &__voice {
     display: flex;
     align-items: center;
@@ -490,5 +574,14 @@ $msg-radius-small: 6px;
 @keyframes lumina-spin {
   to {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes lumina-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
