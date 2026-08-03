@@ -32,6 +32,22 @@ export interface BackendChatSession {
   isMuted?: boolean
 }
 
+export interface BackendContact {
+  username: string
+  displayName?: string
+  remark?: string
+  nickname?: string
+  alias?: string
+  labels?: string[]
+  description?: string
+  detailDescription?: string
+  region?: string
+  avatarUrl?: string
+  type?: 'friend' | 'group' | 'official' | 'former_friend' | 'blocked' | 'other'
+  officialAccountKind?: 'subscription' | 'service' | 'enterprise' | 'unknown'
+  officialAccountType?: number
+}
+
 export interface BackendMessage {
   messageKey: string
   localId: number
@@ -121,6 +137,46 @@ export interface RenderMessage {
   quotedSender?: string
   // 原始 localId（用于图片解密等需要定位原始消息的 IPC 调用）
   localId?: number
+}
+
+// === 渲染层联系人类型 ===
+export type RenderContactType = 'friend' | 'group' | 'official' | 'former_friend' | 'blocked' | 'other'
+
+export interface RenderContact {
+  /** 微信 username（wxid / wxid_xxx / gh_xxx / @chatroom） */
+  username: string
+  /** 展示名（备注优先，其次昵称） */
+  displayName: string
+  /** 备注名 */
+  remark?: string
+  /** 昵称 */
+  nickname?: string
+  /** 微信号 */
+  alias?: string
+  /** 地区 */
+  region?: string
+  /** 个性签名 / 描述 */
+  description?: string
+  /** 朋友圈签名 */
+  detailDescription?: string
+  /** 头像 URL（已升级为 https） */
+  avatarUrl?: string
+  /** 头像占位文字（首字） */
+  avatarText: string
+  /** 头像背景色（基于 username 哈希） */
+  avatarColor: string
+  /** 联系人分类 */
+  type: RenderContactType
+  /** 公众号子类型 */
+  officialAccountKind?: 'subscription' | 'service' | 'enterprise' | 'unknown'
+  /** 拼音首字母（A-Z），非字母字符归为 '#' */
+  sortKey: string
+}
+
+/** 按首字母分组的联系人 */
+export interface ContactGroup {
+  key: string
+  contacts: RenderContact[]
 }
 
 // ---------------- 工具函数 ----------------
@@ -329,6 +385,107 @@ export function adaptMessage(
   }
 }
 
+// === 联系人适配 ===
+
+const CONTACT_TYPE_VALUES: RenderContactType[] = [
+  'friend',
+  'group',
+  'official',
+  'former_friend',
+  'blocked',
+  'other',
+]
+
+/**
+ * 计算 displayName 首字母作为 sortKey。
+ * - 中文字符 / 全角字符 / 数字 / 符号 → '#'
+ * - 英文字母 → 大写首字母
+ * 不引入 pinyin 库，避免体积膨胀；后续可按需替换。
+ */
+function computeSortKey(displayName: string): string {
+  const trimmed = (displayName || '').trim()
+  if (!trimmed) return '#'
+  const first = trimmed.charAt(0)
+  if (/^[A-Za-z]$/.test(first)) {
+    return first.toUpperCase()
+  }
+  return '#'
+}
+
+/**
+ * 适配联系人：BackendContact → RenderContact
+ * - avatarUrl 自动升级 http → https（CSP img-src 兼容）
+ * - displayName 取 remark → nickname → username 兜底
+ * - type 缺省时按 username 推断（@chatroom 群聊 / gh_ 公众号 / 其它好友）
+ */
+export function adaptContact(backend: BackendContact): RenderContact {
+  const username = String(backend.username || '')
+  const remark = (backend.remark || '').trim() || undefined
+  const nickname = (backend.nickname || '').trim() || undefined
+  const displayName =
+    remark || nickname || (backend.displayName || '').trim() || username
+
+  let type: RenderContactType =
+    backend.type && CONTACT_TYPE_VALUES.includes(backend.type)
+      ? backend.type
+      : username.endsWith('@chatroom')
+      ? 'group'
+      : username.startsWith('gh_')
+      ? 'official'
+      : 'friend'
+
+  // 公众号 type 字段有时缺失，按 gh_ 前缀补齐
+  if (type === 'friend' && username.startsWith('gh_')) {
+    type = 'official'
+  }
+
+  const avatarUrl = backend.avatarUrl
+    ? backend.avatarUrl.startsWith('http://')
+      ? 'https://' + backend.avatarUrl.substring(7)
+      : backend.avatarUrl
+    : undefined
+
+  return {
+    username,
+    displayName,
+    remark,
+    nickname,
+    alias: (backend.alias || '').trim() || undefined,
+    region: (backend.region || '').trim() || undefined,
+    description: (backend.description || '').trim() || undefined,
+    detailDescription: (backend.detailDescription || '').trim() || undefined,
+    avatarUrl,
+    avatarText: avatarTextFor(displayName),
+    avatarColor: avatarColorFor(username),
+    type,
+    officialAccountKind: backend.officialAccountKind,
+    sortKey: computeSortKey(displayName),
+  }
+}
+
+/**
+ * 将扁平联系人列表按 sortKey 分组（A-Z + #），返回有序分组。
+ * - 字母组按 A→Z 顺序，'#' 组排末尾
+ * - 每组内联系人按 displayName 排序（大小写不敏感）
+ */
+export function groupContactsBySortKey(contacts: RenderContact[]): ContactGroup[] {
+  const buckets = new Map<string, RenderContact[]>()
+  for (const c of contacts) {
+    const key = c.sortKey
+    const arr = buckets.get(key) || []
+    arr.push(c)
+    buckets.set(key, arr)
+  }
+  const letterKeys = Array.from(buckets.keys()).filter((k) => k !== '#').sort()
+  const orderedKeys = buckets.has('#') ? [...letterKeys, '#'] : letterKeys
+  return orderedKeys.map((key) => ({
+    key,
+    contacts: (buckets.get(key) || []).sort((a, b) =>
+      a.displayName.localeCompare(b.displayName, undefined, { sensitivity: 'base' })
+    ),
+  }))
+}
+
 // ---------------- 后端包裹结构解包辅助 ----------------
 
 /** 后端统一返回结构：{ success, error, ...data } */
@@ -349,6 +506,10 @@ export interface MessagesResult extends BackendResult<unknown> {
 
 export interface AvatarResult extends BackendResult<unknown> {
   avatarUrl?: string
+}
+
+export interface ContactsResult extends BackendResult<unknown> {
+  contacts?: BackendContact[]
 }
 
 /** 解包会话列表结果，失败时抛错（由调用方 catch） */
@@ -373,4 +534,13 @@ export function unwrapMessages(result: MessagesResult | null | undefined): Backe
 export function unwrapAvatarUrl(result: AvatarResult | null | undefined): string | null {
   if (!result || !result.success) return null
   return result.avatarUrl || null
+}
+
+/** 解包联系人列表结果，失败时抛错 */
+export function unwrapContacts(result: ContactsResult | null | undefined): BackendContact[] {
+  if (!result) return []
+  if (!result.success) {
+    throw new Error(result.error || '获取联系人列表失败')
+  }
+  return Array.isArray(result.contacts) ? result.contacts : []
 }

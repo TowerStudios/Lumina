@@ -20,6 +20,12 @@
 - [x] 完整日志系统（主进程 + WCDB，同步写入文件）
 - [x] 头像显示修复（HTTP→HTTPS 升级 + CSP 允许 http/https）
 - [x] Onboarding 流程（数据库路径选择 + 密钥输入 + 连接测试）
+- [x] 图片消息解密预览（chat:getImageData IPC + IntersectionObserver 懒加载 + 点击放大 lightbox）
+- [x] 全局消息搜索（chat:searchMessages + 关键词高亮 + 内容片段截取）
+- [x] 会话右键菜单功能对接（置顶/已读/静音/归档/清空/删除/查看资料，持久化到 config.sessionStates）
+- [x] ContactsPage 通讯录页面（字母分组 + 类型筛选 + 搜索 + 详情面板 + 跳转聊天）
+- [x] 核心 IPC 模块注册（媒体/日志/通知/应用功能/认证，共 22 个新 IPC handler）
+- [x] 修复 wcdb:testConnection / wcdb:open 参数错配（通过 config.getAccountDir 解析 accountDir）
 - [x] 代码已上传 GitHub
 
 ---
@@ -31,13 +37,15 @@
 - [x] 修正 `dbpath.autoDetect` 返回类型为 `{ success, path?, error? }`
 - [x] 修正 `chat.getSessions / getMessages` 返回包裹结构类型
 - [x] 添加 `app.getLogPath` 声明
+- [x] 添加 `ContactInfo / ContactsResult / ImageDataResult` 接口
+- [x] 添加 `log / media / notification / appFeatures / auth` 命名空间声明
 - [ ] 删除与 preload.ts 重复的全局声明，统一以 `preload.ts` 的 `typeof electronAPI` 为唯一类型来源
 
 ### 1.2 SettingsPage 业务字段对接
 - [x] 显示当前解密密钥（脱敏展示，支持修改）
 - [x] 添加"测试连接"按钮（调用 `wcdb.testConnection`）
 - [x] 支持数据库路径手动编辑（不只能通过 Onboarding 重走流程）
-- [ ] 实现应用锁设置（密码锁 + Windows Hello）
+- [ ] 实现应用锁设置（密码锁 + Windows Hello）- IPC 已注册，UI 待对接
 - [ ] 实现多账号管理（扫描/切换/删除账号）
 - [ ] 实现数据与缓存管理（缓存清理、数据备份）
 
@@ -61,10 +69,14 @@
 
 ### 2.3 媒体消息预览
 - [x] 图片消息解密与预览（注册 chat:getImageData IPC，IntersectionObserver 懒加载，点击放大 lightbox）
-- [ ] 视频消息解码与预览（调用 `video:decode`）
-- [ ] 语音消息转文字（调用 `voice:transcribe`）
+- [x] 视频消息解码 IPC（注册 video:decode / video:decodeBatch / video:parseMd5，对接 videoService）
+- [x] 语音消息转文字 IPC（注册 voice:transcribe + voice:resolveCache，流式 partial 推送）
+- [x] 表情包获取 IPC（注册 emoji:get，对接 chatService.downloadEmoji）
+- [x] 图片解密通用 IPC（注册 image:decrypt，对接 imageDecryptService，用于导出/批量预览）
+- [ ] 视频消息 UI 渲染（IPC 已就绪，ChatView 视频组件待实现）
+- [ ] 语音消息 UI 渲染（IPC 已就绪，ChatView 语音组件 + 转写按钮待实现）
 - [ ] 文件消息下载与打开
-- [ ] 表情包获取与显示（调用 `emoji:get`）
+- [ ] 表情包 UI 渲染（IPC 已就绪，ChatView 表情组件待实现）
 
 ### 2.4 特殊消息类型渲染
 - [ ] 引用消息（quotedContent 字段渲染）
@@ -81,17 +93,20 @@
 - [ ] AI 服务（aiChat:send/stop, insight:generate/list/get/delete, analytics:get, groupSummary:generate/list）
 - [ ] 备份与导出（backup:create/restore/cancel, exportContact:export, exportTask:start/cancel/status）
 - [ ] 朋友圈（sns:getFeed/getDetail/getComments/getLikes, sns:blockUser/unblockUser/getBlockedUsers）
-- [ ] 通知与日志（notification:show/close/click, log:read/clear/debug）
-- [ ] 应用功能（app:getLaunchAtStartupStatus/setLaunchAtStartup, app:checkForUpdates/downloadAndInstall）
-- [ ] 媒体处理（voice:transcribe, video:decode, image:decrypt, emoji:get）
-- [ ] 认证（auth:hello/verifyEnabled/unlock/enableLock/disableLock/changePassword）
+- [x] 通知与日志（notification:show/close, log:getPath/read/clear/debug）
+- [x] 应用功能（app:getLaunchAtStartupStatus/setLaunchAtStartup, app:checkForUpdates/downloadAndInstall 占位）
+- [x] 媒体处理（image:decrypt, video:decode/decodeBatch/parseMd5, voice:transcribe/resolveCache, emoji:get）
+- [x] 认证（auth:hello/verifyEnabled/unlock/enableLock/disableLock/changePassword/isLockMode）
 
 ### 3.2 页面实现
-- [ ] ContactsPage - 通讯录（参考 WeFlow）
+- [x] ContactsPage - 通讯录（字母分组 + 类型筛选 + 详情面板 + 跳转聊天）
 - [ ] SnsPage - 朋友圈（含屏蔽用户功能）
 - [ ] AiChatPage - AI 对话
 - [ ] AnalyticsPage - 数据分析（echarts-for-react）
 - [ ] ExportPage - 导出中心
+- [ ] SettingsPage 应用锁 UI（IPC 已就绪，需对接 auth.* 设置面板）
+- [ ] SettingsPage 开机自启 UI（IPC 已就绪，需对接 appFeatures.setLaunchAtStartup 开关）
+- [ ] SettingsPage 日志查看 UI（IPC 已就绪，需对接 log.read 显示日志内容）
 
 ---
 
@@ -137,7 +152,7 @@
 - [ ] Windows NSIS 安装包测试
 - [ ] 应用图标（public/icon.ico）
 - [ ] 代码签名
-- [ ] 自动更新流程验证
+- [ ] 自动更新流程验证（app:checkForUpdates 占位 → 接入 electron-updater）
 
 ---
 
@@ -159,10 +174,13 @@
 
 ## 8. 开发优先级建议
 
-1. **同步 electron.d.ts**（见 1.1）- 类型安全是后续开发的基础
-2. **SettingsPage 业务字段**（见 1.2）- 完善设置页功能
-3. **消息搜索**（见 2.1）- 高频使用功能
-4. **会话右键菜单持久化**（见 2.2）- 当前仅前端状态
-5. **媒体消息预览**（见 2.3）- 提升查看体验
-6. **核心 IPC 注册**（见 3.1）- 解锁更多页面
-7. **页面实现**（见 3.2）- 通讯录、朋友圈等
+1. ~~同步 electron.d.ts~~（见 1.1）✅
+2. ~~SettingsPage 业务字段~~（见 1.2）✅ 密钥/路径/测试连接已完成
+3. ~~消息搜索~~（见 2.1）✅
+4. ~~会话右键菜单持久化~~（见 2.2）✅
+5. ~~媒体消息预览~~（见 2.3）✅ IPC 全部就绪，UI 待对接
+6. ~~核心 IPC 注册~~（见 3.1）✅ 媒体/日志/通知/应用/认证已完成，AI/备份/朋友圈待做
+7. ~~页面实现~~（见 3.2）- ContactsPage ✅，朋友圈/AI/分析/导出待做
+8. **SettingsPage UI 对接**（应用锁/开机自启/日志查看）- IPC 已就绪，UI 待实现
+9. **ChatView 媒体 UI**（视频/语音/表情组件）- IPC 已就绪，UI 待实现
+10. **AI/备份/朋友圈 IPC + 页面** - 待开发

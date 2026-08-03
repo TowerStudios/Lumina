@@ -3,15 +3,20 @@ import { useMemo } from 'react'
 import {
   adaptSession,
   adaptMessage,
+  adaptContact,
   unwrapSessions,
   unwrapMessages,
   unwrapAvatarUrl,
+  unwrapContacts,
   type BackendMessage,
+  type BackendContact,
   type RenderSession,
   type RenderMessage,
+  type RenderContact,
   type SessionsResult,
   type MessagesResult,
   type AvatarResult,
+  type ContactsResult,
 } from '@/services/chatAdapter'
 
 // === Chat Store ===
@@ -54,6 +59,13 @@ interface ChatState {
   searchLoading: boolean
   searchError: string | null
 
+  // === 联系人 ===
+  contacts: RenderContact[]
+  contactsLoading: boolean
+  contactsError: string | null
+  /** 当前选中的联系人 username（用于详情面板） */
+  selectedContactId: string | null
+
   // === Actions ===
   loadSessions: () => Promise<void>
   loadSessionStates: () => Promise<void>
@@ -67,6 +79,8 @@ interface ChatState {
   clearSessionMessages: (sessionId: string) => void
   runSearch: (keyword: string) => Promise<void>
   clearSearch: () => void
+  loadContacts: (force?: boolean) => Promise<void>
+  selectContact: (username: string | null) => void
 }
 
 export const useChatStore = create<ChatState>((set, get) => {
@@ -119,6 +133,11 @@ export const useChatStore = create<ChatState>((set, get) => {
   searchResults: [],
   searchLoading: false,
   searchError: null,
+
+  contacts: [],
+  contactsLoading: false,
+  contactsError: null,
+  selectedContactId: null,
 
   loadSessions: async () => {
     set({ sessionsLoading: true, sessionsError: null })
@@ -356,6 +375,30 @@ export const useChatStore = create<ChatState>((set, get) => {
 
   clearSearch: () =>
     set({ searchKeyword: '', searchResults: [], searchLoading: false, searchError: null }),
+
+  // === 联系人加载 ===
+  // lite 模式调用 getContacts({ lite: true })，已含内存缓存；force=true 强制重新拉取
+  loadContacts: async (force = false) => {
+    if (!force && get().contacts.length > 0) return
+    if (get().contactsLoading) return
+    set({ contactsLoading: true, contactsError: null })
+    try {
+      const api = window.electronAPI
+      if (!api?.chat?.getContacts) {
+        throw new Error('electronAPI.chat.getContacts 不可用')
+      }
+      const result = (await api.chat.getContacts({ lite: true })) as ContactsResult
+      const raw = unwrapContacts(result) as BackendContact[]
+      const contacts = raw.map((c) => adaptContact(c))
+      set({ contacts, contactsLoading: false })
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e)
+      set({ contactsLoading: false, contactsError: msg })
+      console.error('[chatStore] loadContacts 失败:', e)
+    }
+  },
+
+  selectContact: (username) => set({ selectedContactId: username }),
   }
 })
 
@@ -385,4 +428,15 @@ export function useDisplaySessions(): RenderSession[] {
       }
     })
   }, [sessions, pinnedMap, mutedMap, archivedMap, markedUnreadMap])
+}
+
+// === 选择器：当前选中的联系人对象（基于 selectedContactId） ===
+// 单独订阅避免列表变化时详情面板重渲染
+export function useSelectedContact(): RenderContact | null {
+  const selectedId = useChatStore((s) => s.selectedContactId)
+  const contacts = useChatStore((s) => s.contacts)
+  return useMemo(
+    () => (selectedId ? contacts.find((c) => c.username === selectedId) ?? null : null),
+    [selectedId, contacts]
+  )
 }

@@ -160,6 +160,128 @@ const electronAPI = {
       ipcRenderer.invoke('shell:openExternal', url) as Promise<{ success: boolean; error?: string }>
   },
 
+  // === 日志 ===
+  log: {
+    getPath: () => ipcRenderer.invoke('log:getPath') as Promise<string>,
+    read: () =>
+      ipcRenderer.invoke('log:read') as Promise<{ success: boolean; content?: string; error?: string }>,
+    clear: () => ipcRenderer.invoke('log:clear') as Promise<{ success: boolean; error?: string }>,
+    debug: (data: unknown) => ipcRenderer.send('log:debug', data)
+  },
+
+  // === 媒体处理 ===
+  media: {
+    // 解密单张图片
+    decryptImage: (payload: {
+      sessionId?: string
+      imageMd5?: string
+      imageDatName?: string
+      createTime?: number
+      force?: boolean
+      preferFilePath?: boolean
+      hardlinkOnly?: boolean
+    }) =>
+      ipcRenderer.invoke('image:decrypt', payload) as Promise<{
+        success: boolean
+        path?: string
+        dataUrl?: string
+        error?: string
+      }>,
+    // 视频解码（获取视频信息）
+    decodeVideo: (videoMd5: string, options?: { includePoster?: boolean; posterFormat?: 'dataUrl' | 'fileUrl' }) =>
+      ipcRenderer.invoke('video:decode', videoMd5, options) as Promise<{
+        success: boolean
+        exists?: boolean
+        path?: string
+        poster?: string
+        error?: string
+      }>,
+    // 批量视频信息
+    decodeVideoBatch: (videoMd5List?: string[], options?: { includePoster?: boolean; posterFormat?: 'dataUrl' | 'fileUrl' }) =>
+      ipcRenderer.invoke('video:decodeBatch', videoMd5List, options) as Promise<{
+        success: boolean
+        rows?: Array<{ index: number; md5: string; success: boolean; path?: string; poster?: string }>
+        error?: string
+      }>,
+    // 解析视频 md5
+    parseVideoMd5: (content: string) =>
+      ipcRenderer.invoke('video:parseMd5', content) as Promise<{ success: boolean; md5?: string; error?: string }>,
+    // 语音转文字（流式，partial 通过 onTranscribePartial 推送）
+    transcribeVoice: (
+      sessionId: string,
+      msgId: string,
+      createTime?: number,
+      serverId?: string | number
+    ) =>
+      ipcRenderer.invoke('voice:transcribe', sessionId, msgId, createTime, serverId) as Promise<{
+        success: boolean
+        transcript?: string
+        error?: string
+      }>,
+    // 语音转写进度订阅
+    onTranscribePartial: (
+      callback: (payload: { sessionId: string; msgId: string; text: string }) => void
+    ) => {
+      const listener = (_event: IpcRendererEvent, payload: { sessionId: string; msgId: string; text: string }) =>
+        callback(payload)
+      ipcRenderer.on('voice:transcribePartial', listener)
+      return () => ipcRenderer.removeAllListeners('voice:transcribePartial')
+    },
+    // 解析语音缓存
+    resolveVoiceCache: (sessionId: string, msgId: string) =>
+      ipcRenderer.invoke('voice:resolveCache', sessionId, msgId) as Promise<{
+        success: boolean
+        hasCache?: boolean
+        data?: string
+        error?: string
+      }>,
+    // 下载表情包
+    getEmoji: (cdnUrl: string, md5?: string) =>
+      ipcRenderer.invoke('emoji:get', cdnUrl, md5) as Promise<{
+        success: boolean
+        localPath?: string
+        error?: string
+      }>
+  },
+
+  // === 系统通知 ===
+  notification: {
+    show: (data: { title: string; content: string; avatarUrl?: string; sessionId?: string; targetRoute?: string }) =>
+      ipcRenderer.invoke('notification:show', data) as Promise<{ success: boolean; id?: number; error?: string }>,
+    close: () => ipcRenderer.invoke('notification:close') as Promise<{ success: boolean }>
+  },
+
+  // === 应用功能 ===
+  appFeatures: {
+    getLaunchAtStartupStatus: () =>
+      ipcRenderer.invoke('app:getLaunchAtStartupStatus') as Promise<{ openAtLogin: boolean; error?: string }>,
+    setLaunchAtStartup: (enabled: boolean) =>
+      ipcRenderer.invoke('app:setLaunchAtStartup', enabled) as Promise<{ success: boolean; error?: string }>,
+    checkForUpdates: () =>
+      ipcRenderer.invoke('app:checkForUpdates') as Promise<{ hasUpdate: boolean; version?: string; releaseNotes?: string }>,
+    downloadAndInstall: () =>
+      ipcRenderer.invoke('app:downloadAndInstall') as Promise<{ success: boolean; error?: string }>
+  },
+
+  // === 认证（应用锁） ===
+  auth: {
+    hello: (message?: string) =>
+      ipcRenderer.invoke('auth:hello', message) as Promise<{ success: boolean; error?: string }>,
+    verifyEnabled: () => ipcRenderer.invoke('auth:verifyEnabled') as Promise<boolean>,
+    unlock: (password: string) =>
+      ipcRenderer.invoke('auth:unlock', password) as Promise<{ success: boolean; error?: string }>,
+    enableLock: (password: string) =>
+      ipcRenderer.invoke('auth:enableLock', password) as Promise<{ success: boolean; error?: string }>,
+    disableLock: (password: string) =>
+      ipcRenderer.invoke('auth:disableLock', password) as Promise<{ success: boolean; error?: string }>,
+    changePassword: (oldPassword: string, newPassword: string) =>
+      ipcRenderer.invoke('auth:changePassword', oldPassword, newPassword) as Promise<{
+        success: boolean
+        error?: string
+      }>,
+    isLockMode: () => ipcRenderer.invoke('auth:isLockMode') as Promise<boolean>
+  },
+
   // 系统平台
   platform: process.platform
 } as const

@@ -3,10 +3,10 @@ import { TitleBar } from '@/components/TitleBar/TitleBar'
 import { Sidebar } from '@/components/Sidebar/Sidebar'
 import { ChatModule } from '@/components/ChatModule/ChatModule'
 import { SettingsPage } from '@/components/SettingsPage/SettingsPage'
+import { ContactsPage } from '@/components/ContactsPage/ContactsPage'
 import { PlaceholderPage } from '@/components/PlaceholderPage'
 import { OnboardingPage } from '@/components/OnboardingPage/OnboardingPage'
 import {
-  Users,
   Image as ImageIcon,
   Sparkles,
   BarChart3,
@@ -84,7 +84,7 @@ export function AppLayout() {
       case 'chats':
         return <ChatModule />
       case 'contacts':
-        return <PlaceholderPage title="联系人" description="联系人列表与详情，含已删/屏蔽分类。" icon={<Users size={48} strokeWidth={1} />} />
+        return <ContactsPage />
       case 'sns':
         return <PlaceholderPage title="朋友圈" description="朋友圈时间线、防删、导出。" icon={<ImageIcon size={48} strokeWidth={1} />} />
       case 'ai':

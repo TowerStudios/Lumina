@@ -1,0 +1,525 @@
+// === Telegram 风格联系人页 ===
+// 对标 tdesktop/Telegram/SourceFiles/info/
+// 左侧列表（按字母分组）+ 右侧详情卡片
+
+.contacts-page {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background: var(--bg-primary);
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+
+  // === 左侧列表面板 ===
+  &__list-panel {
+    display: flex;
+    flex-direction: column;
+    width: 360px;
+    flex-shrink: 0;
+    background: var(--dialogs-bg);
+    border-right: 1px solid var(--divider-color);
+    overflow: hidden;
+  }
+
+  // === 顶栏 ===
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 52px;
+    padding: 0 12px;
+    flex-shrink: 0;
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  &__title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bold);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+
+    &:hover {
+      background: var(--dialogs-bg-hover);
+      color: var(--text-primary);
+    }
+  }
+
+  // === 搜索栏 ===
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 12px 8px;
+    padding: 0 12px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    height: 36px;
+
+    &-icon {
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    &-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: var(--font-size-base);
+      -webkit-app-region: no-drag;
+      app-region: no-drag;
+
+      &::placeholder {
+        color: var(--text-placeholder);
+      }
+    }
+
+    &-clear {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border: none;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+
+      &:hover {
+        background: var(--text-secondary);
+      }
+    }
+  }
+
+  // === 类型筛选标签 ===
+  &__filters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px 8px;
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: none;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    font-size: var(--font-size-xs);
+    line-height: 1;
+    white-space: nowrap;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+
+    &:hover {
+      background: var(--dialogs-bg-hover);
+      color: var(--text-primary);
+    }
+
+    &--active {
+      background: var(--dialogs-bg-active);
+      color: var(--dialogs-name-fg-active);
+
+      &:hover {
+        background: var(--dialogs-bg-active);
+        color: var(--dialogs-name-fg-active);
+      }
+    }
+  }
+
+  &__filter-count {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+    font-size: 11px;
+  }
+
+  // === 列表容器 ===
+  &__items {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 0;
+  }
+
+  // === 加载/错误/空状态 ===
+  &__state,
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    gap: 8px;
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+    text-align: center;
+
+    &--error {
+      color: var(--danger);
+
+      button {
+        padding: 6px 12px;
+        border: 1px solid var(--danger);
+        background: transparent;
+        color: var(--danger);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-size: var(--font-size-sm);
+
+        &:hover {
+          background: var(--danger-hover);
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  &__spinner {
+    animation: lumina-contacts-spin 1s linear infinite;
+  }
+
+  // === 分组 ===
+  &__group {
+    margin-bottom: 4px;
+  }
+
+  &__group-label {
+    padding: 8px 16px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  // === 联系人项 ===
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background var(--transition-fast);
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+
+    &:hover {
+      background: var(--dialogs-bg-hover);
+    }
+
+    &--active {
+      background: var(--dialogs-bg-active);
+
+      .contacts-page__name,
+      .contacts-page__sub,
+      .contacts-page__remark,
+      .contacts-page__alias,
+      .contacts-page__type-badge {
+        color: var(--dialogs-name-fg-active);
+      }
+
+      .contacts-page__type-badge {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+      }
+    }
+  }
+
+  // === 头像 ===
+  &__avatar-wrap {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+  }
+
+  &__avatar,
+  &__avatar--text {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    user-select: none;
+    overflow: hidden;
+  }
+
+  &__avatar-img {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--bg-secondary);
+  }
+
+  // === 内容 ===
+  &__content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--dialogs-name-fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__sub {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__remark,
+  &__alias {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // === 类型徽章 ===
+  &__type-badge {
+    flex-shrink: 0;
+    padding: 2px 6px;
+    background: var(--bg-secondary);
+    color: var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.4;
+
+    &--group {
+      color: #40a7e3;
+      background: rgba(64, 167, 227, 0.12);
+    }
+    &--official {
+      color: #e3824a;
+      background: rgba(227, 130, 74, 0.12);
+    }
+    &--former_friend {
+      color: #999;
+      background: rgba(150, 150, 150, 0.12);
+    }
+    &--blocked {
+      color: #d84d4d;
+      background: rgba(216, 77, 77, 0.12);
+    }
+    &--other {
+      color: var(--text-tertiary);
+    }
+  }
+
+  // 关键词高亮
+  &__hit-mark {
+    background: transparent;
+    color: var(--primary, #40a7e3);
+    font-weight: 600;
+    padding: 0;
+  }
+
+  // === 右侧详情面板 ===
+  &__detail-panel {
+    flex: 1;
+    min-width: 0;
+    background: var(--bg-primary);
+    overflow-y: auto;
+  }
+
+  &__detail-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 12px;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-sm);
+  }
+}
+
+// === 联系人详情卡 ===
+.contact-detail {
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 32px 24px;
+
+  &__header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--divider-color);
+  }
+
+  &__avatar-wrap {
+    width: 96px;
+    height: 96px;
+    margin-bottom: 12px;
+  }
+
+  &__avatar,
+  &__avatar--text {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    font-weight: 500;
+    color: #fff;
+    overflow: hidden;
+  }
+
+  &__avatar-img {
+    width: 96px;
+    height: 96px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--bg-secondary);
+  }
+
+  &__name {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-bold);
+    margin: 0 0 4px;
+    word-break: break-word;
+  }
+
+  &__username {
+    font-size: 13px;
+    color: var(--text-tertiary);
+    font-family: 'Consolas', 'Monaco', monospace;
+  }
+
+  &__chat-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 8px 18px;
+    background: var(--primary, #40a7e3);
+    color: var(--primary-on, #fff);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    transition: background var(--transition-fast);
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+
+    &:hover {
+      background: var(--primary-hover, #3994cc);
+    }
+  }
+
+  // === 字段列表 ===
+  &__fields {
+    display: flex;
+    flex-direction: column;
+    padding: 16px 0;
+    gap: 4px;
+  }
+
+  &__field {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 8px;
+    border-radius: var(--radius-md);
+    transition: background var(--transition-fast);
+
+    &:hover {
+      background: var(--dialogs-bg-hover);
+    }
+  }
+
+  &__field-icon {
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+    color: var(--text-tertiary);
+    margin-top: 2px;
+  }
+
+  &__field-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__field-label {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-bottom: 2px;
+  }
+
+  &__field-value {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    word-break: break-word;
+    line-height: 1.4;
+  }
+}
+
+@keyframes lumina-contacts-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

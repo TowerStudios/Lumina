@@ -82,6 +82,28 @@ export interface ImageDataResult {
   error?: string
 }
 
+export interface ContactInfo {
+  username: string
+  displayName?: string
+  remark?: string
+  nickname?: string
+  alias?: string
+  labels?: string[]
+  description?: string
+  detailDescription?: string
+  region?: string
+  avatarUrl?: string
+  type: 'friend' | 'group' | 'official' | 'former_friend' | 'blocked' | 'other'
+  officialAccountKind?: 'subscription' | 'service' | 'enterprise' | 'unknown'
+  officialAccountType?: number
+}
+
+export interface ContactsResult {
+  success: boolean
+  contacts?: ContactInfo[]
+  error?: string
+}
+
 export interface ElectronAPI {
   // 应用信息
   app: {
@@ -159,7 +181,7 @@ export interface ElectronAPI {
     getLatestMessages: (sessionId: string, limit?: number) => Promise<MessagesResult>
     getSessionDetail: (sessionId: string) => Promise<unknown | null>
     getContact: (username: string) => Promise<unknown | null>
-    getContacts: (options?: { lite?: boolean }) => Promise<unknown[]>
+    getContacts: (options?: { lite?: boolean }) => Promise<ContactsResult>
     getContactAvatar: (username: string, chatroomId?: string) => Promise<AvatarResult | string | null>
     getMyAvatarUrl: () => Promise<AvatarResult | null>
     markAllSessionsRead: () => Promise<unknown>
@@ -185,6 +207,89 @@ export interface ElectronAPI {
   shell: {
     openPath: (path: string) => Promise<string>
     openExternal: (url: string) => Promise<{ success: boolean; error?: string }>
+  }
+
+  // === 日志 ===
+  log: {
+    getPath: () => Promise<string>
+    read: () => Promise<{ success: boolean; content?: string; error?: string }>
+    clear: () => Promise<{ success: boolean; error?: string }>
+    debug: (data: unknown) => void
+  }
+
+  // === 媒体处理 ===
+  media: {
+    decryptImage: (payload: {
+      sessionId?: string
+      imageMd5?: string
+      imageDatName?: string
+      createTime?: number
+      force?: boolean
+      preferFilePath?: boolean
+      hardlinkOnly?: boolean
+    }) => Promise<{ success: boolean; path?: string; dataUrl?: string; error?: string }>
+    decodeVideo: (
+      videoMd5: string,
+      options?: { includePoster?: boolean; posterFormat?: 'dataUrl' | 'fileUrl' }
+    ) => Promise<{ success: boolean; exists?: boolean; path?: string; poster?: string; error?: string }>
+    decodeVideoBatch: (
+      videoMd5List?: string[],
+      options?: { includePoster?: boolean; posterFormat?: 'dataUrl' | 'fileUrl' }
+    ) => Promise<{
+      success: boolean
+      rows?: Array<{ index: number; md5: string; success: boolean; path?: string; poster?: string }>
+      error?: string
+    }>
+    parseVideoMd5: (content: string) => Promise<{ success: boolean; md5?: string; error?: string }>
+    transcribeVoice: (
+      sessionId: string,
+      msgId: string,
+      createTime?: number,
+      serverId?: string | number
+    ) => Promise<{ success: boolean; transcript?: string; error?: string }>
+    onTranscribePartial: (
+      callback: (payload: { sessionId: string; msgId: string; text: string }) => void
+    ) => () => void
+    resolveVoiceCache: (
+      sessionId: string,
+      msgId: string
+    ) => Promise<{ success: boolean; hasCache?: boolean; data?: string; error?: string }>
+    getEmoji: (cdnUrl: string, md5?: string) => Promise<{ success: boolean; localPath?: string; error?: string }>
+  }
+
+  // === 系统通知 ===
+  notification: {
+    show: (data: {
+      title: string
+      content: string
+      avatarUrl?: string
+      sessionId?: string
+      targetRoute?: string
+    }) => Promise<{ success: boolean; id?: number; error?: string }>
+    close: () => Promise<{ success: boolean }>
+  }
+
+  // === 应用功能 ===
+  appFeatures: {
+    getLaunchAtStartupStatus: () => Promise<{ openAtLogin: boolean; error?: string }>
+    setLaunchAtStartup: (enabled: boolean) => Promise<{ success: boolean; error?: string }>
+    checkForUpdates: () => Promise<{
+      hasUpdate: boolean
+      version?: string
+      releaseNotes?: string
+    }>
+    downloadAndInstall: () => Promise<{ success: boolean; error?: string }>
+  }
+
+  // === 认证（应用锁） ===
+  auth: {
+    hello: (message?: string) => Promise<{ success: boolean; error?: string }>
+    verifyEnabled: () => Promise<boolean>
+    unlock: (password: string) => Promise<{ success: boolean; error?: string }>
+    enableLock: (password: string) => Promise<{ success: boolean; error?: string }>
+    disableLock: (password: string) => Promise<{ success: boolean; error?: string }>
+    changePassword: (oldPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>
+    isLockMode: () => Promise<boolean>
   }
 
   // 系统平台
