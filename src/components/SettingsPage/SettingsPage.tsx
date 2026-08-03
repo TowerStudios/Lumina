@@ -1,6 +1,6 @@
 import { ThemeSettings } from './ThemeSettings'
 import { useEffect, useState } from 'react'
-import { RefreshCw, Loader2, Eye, EyeOff, FlaskTube, Check, AlertCircle } from 'lucide-react'
+import { RefreshCw, Loader2, Eye, EyeOff, FlaskConical, Check, AlertCircle } from 'lucide-react'
 import './SettingsPage.scss'
 
 type TestState = 'idle' | 'testing' | 'ok' | 'fail'
@@ -188,7 +188,7 @@ export function SettingsPage() {
                   {testState === 'testing' ? (
                     <Loader2 size={14} className="settings-page__spinner" />
                   ) : (
-                    <FlaskTube size={14} />
+                    <FlaskConical size={14} />
                   )}
                   <span>测试连接</span>
                 </button>

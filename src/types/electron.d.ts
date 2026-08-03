@@ -292,6 +292,64 @@ export interface ElectronAPI {
     isLockMode: () => Promise<boolean>
   }
 
+  // === AI 对话 ===
+  aiChat: {
+    chatWithContext: (requestId: string, context: unknown, userMessage: string) => Promise<unknown>
+    abortRequest: (requestId: string) => Promise<{ success: boolean; error?: string }>
+    listSessions: () => Promise<unknown>
+    getSession: (sessionId: string, displayName?: string) => Promise<unknown>
+    clearSessionMessages: (sessionId: string) => Promise<unknown>
+    deleteSession: (sessionId: string) => Promise<unknown>
+    listProviderPresets: () => Promise<unknown>
+    applyProviderPreset: (providerId: string) => Promise<unknown>
+    cleanupExpiredSessions: () => Promise<unknown>
+    onChatChunk: (callback: (requestId: string, chunk: string) => void) => () => void
+  }
+
+  // === AI 见解（Insight） ===
+  insight: {
+    testConnection: () => Promise<unknown>
+    getTodayStats: () => Promise<unknown>
+    listRecords: (filters?: unknown) => Promise<unknown>
+    getRecord: (id: string) => Promise<unknown>
+    markRecordRead: (id: string) => Promise<unknown>
+    clearRecords: (filters?: unknown) => Promise<unknown>
+    triggerTest: () => Promise<unknown>
+    triggerSessionInsight: (payload: unknown) => Promise<unknown>
+    listProfileStatuses: (sessionIds: string[]) => Promise<unknown>
+    generateProfile: (payload: unknown) => Promise<unknown>
+    cancelProfile: (sessionId?: string) => Promise<unknown>
+    generateFootprintInsight: (payload: unknown) => Promise<unknown>
+    generateMessageInsight: (payload: unknown) => Promise<unknown>
+  }
+
+  // === 数据分析（Analytics） ===
+  analytics: {
+    getOverallStatistics: (force?: boolean) => Promise<unknown>
+    getContactRankings: (limit?: number, beginTimestamp?: number, endTimestamp?: number) => Promise<unknown>
+    getTimeDistribution: () => Promise<unknown>
+    getSelfSentDailyDistribution: (beginTimestamp?: number, endTimestamp?: number, force?: boolean) => Promise<unknown>
+    getExcludedUsernames: () => Promise<unknown>
+    setExcludedUsernames: (usernames: string[]) => Promise<unknown>
+    getExcludeCandidates: () => Promise<unknown>
+    clearCache: () => Promise<unknown>
+  }
+
+  // === 群摘要（GroupSummary） ===
+  groupSummary: {
+    listRecords: (filters?: unknown) => Promise<unknown>
+    getRecord: (id: string) => Promise<unknown>
+    triggerManual: (payload: unknown) => Promise<unknown>
+    triggerDay: (payload: unknown) => Promise<unknown>
+  }
+
+  // === 备份与恢复（Backup） ===
+  backup: {
+    create: (payload: { outputPath: string; options?: unknown }) => Promise<unknown>
+    inspect: (payload: { archivePath: string }) => Promise<unknown>
+    restore: (payload: { archivePath: string }) => Promise<unknown>
+  }
+
   // 系统平台
   platform: string
 }

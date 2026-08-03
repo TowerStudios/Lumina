@@ -25,6 +25,9 @@
 - [x] 会话右键菜单功能对接（置顶/已读/静音/归档/清空/删除/查看资料，持久化到 config.sessionStates）
 - [x] ContactsPage 通讯录页面（字母分组 + 类型筛选 + 搜索 + 详情面板 + 跳转聊天）
 - [x] 核心 IPC 模块注册（媒体/日志/通知/应用功能/认证，共 22 个新 IPC handler）
+- [x] AI/洞察/分析/群摘要/备份 IPC 模块注册（共 38 个新 IPC handler，对接 aiChatService/insightService/insightRecordService/insightProfileService/analyticsService/groupSummaryService/backupService）
+- [x] config:set 联动 insightService/groupSummaryService 的 handleConfigChanged 回调
+- [x] 渲染层类型检查通过（修复 SCSS 声明/FlaskTube 图标/scanWxids 类型，删除 4 个死代码文件）
 - [x] 修复 wcdb:testConnection / wcdb:open 参数错配（通过 config.getAccountDir 解析 accountDir）
 - [x] 代码已上传 GitHub
 
@@ -90,9 +93,13 @@
 ## 3. 中优先级 - 核心模块注册
 
 ### 3.1 IPC 模块注册（electron/ipcHandlers.ts）
-- [ ] AI 服务（aiChat:send/stop, insight:generate/list/get/delete, analytics:get, groupSummary:generate/list）
-- [ ] 备份与导出（backup:create/restore/cancel, exportContact:export, exportTask:start/cancel/status）
-- [ ] 朋友圈（sns:getFeed/getDetail/getComments/getLikes, sns:blockUser/unblockUser/getBlockedUsers）
+- [x] AI 对话（aiChat:chatWithContext/abortRequest/listSessions/getSession/clearSessionMessages/deleteSession/listProviderPresets/applyProviderPreset/cleanupExpiredSessions）
+- [x] AI 见解（insight:testConnection/getTodayStats/listRecords/getRecord/markRecordRead/clearRecords/triggerTest/triggerSessionInsight/listProfileStatuses/generateProfile/cancelProfile/generateFootprintInsight/generateMessageInsight）
+- [x] 数据分析（analytics:getOverallStatistics/getContactRankings/getTimeDistribution/getSelfSentDailyDistribution/getExcludedUsernames/setExcludedUsernames/getExcludeCandidates + cache:clearAnalytics）
+- [x] 群摘要（groupSummary:listRecords/getRecord/triggerManual/triggerDay）
+- [x] 备份（backup:create/inspect/restore）
+- [ ] 导出与导出任务（export:exportSessions/exportSession/exportContacts/cancelTask/pauseTask/resumeTask/getExportStats）- 依赖 exportWorker.js 和辅助函数
+- [ ] 朋友圈（sns:getTimeline/getSnsUsernames/getUserPostCounts/getExportStats/proxyImage/downloadImage/exportTimeline/installBlockDeleteTrigger 等）- 依赖 dialog 和 trigger 机制
 - [x] 通知与日志（notification:show/close, log:getPath/read/clear/debug）
 - [x] 应用功能（app:getLaunchAtStartupStatus/setLaunchAtStartup, app:checkForUpdates/downloadAndInstall 占位）
 - [x] 媒体处理（image:decrypt, video:decode/decodeBatch/parseMd5, voice:transcribe/resolveCache, emoji:get）
@@ -181,6 +188,50 @@
 5. ~~媒体消息预览~~（见 2.3）✅ IPC 全部就绪，UI 待对接
 6. ~~核心 IPC 注册~~（见 3.1）✅ 媒体/日志/通知/应用/认证已完成，AI/备份/朋友圈待做
 7. ~~页面实现~~（见 3.2）- ContactsPage ✅，朋友圈/AI/分析/导出待做
-8. **SettingsPage UI 对接**（应用锁/开机自启/日志查看）- IPC 已就绪，UI 待实现
-9. **ChatView 媒体 UI**（视频/语音/表情组件）- IPC 已就绪，UI 待实现
-10. **AI/备份/朋友圈 IPC + 页面** - 待开发
+
+### 下一阶段执行顺序（2026-08-03 起推进）
+
+**P0 - 立即执行（稳定性 + IPC 完整性）**
+1. ✅ 运行 `npm run typecheck` 验证类型完整性，修复 TS 错误
+2. ~~清理 electron.d.ts 与 preload.ts 重复声明~~（见 1.1 末项）- 推迟
+3. ✅ 注册 AI 服务 IPC（aiChat:chatWithContext/abortRequest 等 9 个 + insight:* 13 个）
+4. ✅ 注册备份导出 IPC（backup:create/inspect/restore）- export:* 依赖 Worker 推迟
+5. ✅ 注册数据分析 + 群摘要 IPC（analytics:* 9 个 + groupSummary:* 4 个）
+6. ⏸ 朋友圈 IPC（sns:*）- 依赖 dialog 和 trigger 机制，推迟到 P4 阶段
+
+**P1 - SettingsPage UI 对接（IPC 全部已就绪）**
+6. SettingsPage 应用锁 UI（密码锁 + Windows Hello，对接 auth.*）
+7. SettingsPage 开机自启 UI（对接 appFeatures.setLaunchAtStartup）
+8. SettingsPage 日志查看 UI（对接 log.read，支持清空按钮）
+
+**P2 - ChatView 媒体 UI（IPC 全部已就绪）**
+9. 视频消息 UI（对接 video:decode，含封面 + 播放按钮）
+10. 语音消息 UI（对接 voice:transcribe，含波形 + 转写按钮）
+11. 表情包 UI（对接 emoji:get，缓存本地路径）
+12. 文件消息下载与打开
+
+**P3 - 特殊消息类型渲染**
+13. 引用消息（quotedContent 字段渲染）
+14. @提及高亮（群聊消息）
+15. 文件/链接/名片/位置/转账等卡片式渲染
+16. 撤回消息显示（已实现基础，需测试真实数据）
+17. 转发消息层级展示
+18. 搜索结果点击定位消息（ChatView.scrollToMessage）
+
+**P4 - 页面实现**
+19. SnsPage - 朋友圈（含屏蔽用户功能）
+20. AiChatPage - AI 对话
+21. AnalyticsPage - 数据分析（echarts-for-react）
+22. ExportPage - 导出中心
+
+**P5 - 数据层与工程**
+23. ChatDetailPanel 联系人资料 + 共同群聊 + 消息统计
+24. 多账号管理（扫描/切换/删除账号）
+25. 数据与缓存管理（缓存清理、数据备份）
+26. mockChatData.ts 清理
+
+**P6 - UI/UX 优化与打包**
+27. TG 风格细节（气泡圆角、时间浮动布局、长文本换行）
+28. 窗口与布局（透明圆角、3 栏自适应动画）
+29. 主题（浅色/深色、跟随系统、液态玻璃）
+30. 打包发布（NSIS、图标、签名、自动更新）

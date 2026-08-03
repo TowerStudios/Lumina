@@ -12,6 +12,13 @@ import { imageDecryptService } from './services/imageDecryptService'
 import { videoService } from './services/videoService'
 import { windowsHelloService } from './services/windowsHelloService'
 import { showSystemNotification } from './services/systemNotificationService'
+import { aiChatService } from './services/aiChatService'
+import { insightService } from './services/insightService'
+import { insightRecordService } from './services/insightRecordService'
+import { insightProfileService } from './services/insightProfileService'
+import { analyticsService } from './services/analyticsService'
+import { groupSummaryService } from './services/groupSummaryService'
+import { backupService } from './services/backupService'
 import { getLogPath, logInfo, logError } from './utils/logger'
 
 // === 业务 IPC 注册器 ===
@@ -36,6 +43,13 @@ export function registerBusinessIpcHandlers(): void {
 
   ipcMain.handle('config:set', async (_event, key: string, value: unknown) => {
     config.set(key as any, value as any)
+    // 联动 AI 见解 / 群摘要服务的配置变更回调（参考 WeFlow main.ts）
+    try {
+      void insightService.handleConfigChanged(key)
+      void groupSummaryService.handleConfigChanged(key)
+    } catch (e) {
+      logError('ipc', `config:set 联动 handleConfigChanged 失败 (key=${key}):`, e)
+    }
   })
 
   ipcMain.handle('config:clear', async () => {
@@ -516,6 +530,365 @@ export function registerBusinessIpcHandlers(): void {
       return config.isLockMode()
     } catch {
       return false
+    }
+  })
+
+  // === AI 对话 ===
+  // 流式对话：通过 event.sender.send('aiChat:chatChunk', requestId, chunk) 推送增量
+  // 参数：requestId, context, userMessage
+  // context: { sessionId?, displayName?, startTime?, endTime?, selectedMessages? }
+  ipcMain.handle('aiChat:chatWithContext', async (event, requestId: string, context: any, userMessage: string) => {
+    try {
+      return await aiChatService.chatWithContext(requestId, context, userMessage, (chunk: string) => {
+        event.sender.send('aiChat:chatChunk', requestId, chunk)
+      })
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 中止进行中的对话请求
+  ipcMain.handle('aiChat:abortRequest', async (_event, requestId: string) => {
+    try {
+      aiChatService.abortRequest(requestId)
+      return { success: true }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('aiChat:listSessions', async () => {
+    try {
+      return { success: true, sessions: aiChatService.listSessions() }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('aiChat:getSession', async (_event, sessionId: string, displayName?: string) => {
+    try {
+      return { success: true, session: aiChatService.getSession(sessionId, displayName) }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('aiChat:clearSessionMessages', async (_event, sessionId: string) => {
+    try {
+      return aiChatService.clearSessionMessages(sessionId)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('aiChat:deleteSession', async (_event, sessionId: string) => {
+    try {
+      return aiChatService.deleteSession(sessionId)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('aiChat:listProviderPresets', async () => {
+    try {
+      return { success: true, presets: aiChatService.listProviderPresets() }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('aiChat:applyProviderPreset', async (_event, providerId: string) => {
+    try {
+      return aiChatService.applyProviderPreset(providerId)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('aiChat:cleanupExpiredSessions', async () => {
+    try {
+      return { success: true, ...aiChatService.cleanupExpiredSessions() }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // === AI 见解（Insight） ===
+  // 测试 AI 连接
+  ipcMain.handle('insight:testConnection', async () => {
+    try {
+      return await insightService.testConnection()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取今日统计
+  ipcMain.handle('insight:getTodayStats', async () => {
+    try {
+      return await insightService.getTodayStats()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 列出洞察记录（支持筛选）
+  // filters: { keyword?, sessionId?, startTime?, endTime?, sourceType?, limit?, offset? }
+  ipcMain.handle('insight:listRecords', async (_event, filters?: any) => {
+    try {
+      return insightRecordService.listRecords(filters || {})
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取单条洞察记录
+  ipcMain.handle('insight:getRecord', async (_event, id: string) => {
+    try {
+      return insightRecordService.getRecord(id)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 标记洞察记录为已读
+  ipcMain.handle('insight:markRecordRead', async (_event, id: string) => {
+    try {
+      return insightRecordService.markRecordRead(id)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 清除洞察记录（对应"delete"）
+  // filters: { sessionId?, startTime?, endTime? }
+  ipcMain.handle('insight:clearRecords', async (_event, filters?: any) => {
+    try {
+      return insightRecordService.clearRecords(filters || {})
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 触发测试洞察
+  ipcMain.handle('insight:triggerTest', async () => {
+    try {
+      return await insightService.triggerTest()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 触发会话洞察（对应"generate"）
+  // payload: { sessionId, displayName?, avatarUrl? }
+  ipcMain.handle('insight:triggerSessionInsight', async (_event, payload: any) => {
+    try {
+      return await insightService.triggerSessionInsight(payload)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 列出会话的画像生成状态
+  ipcMain.handle('insight:listProfileStatuses', async (_event, sessionIds: string[]) => {
+    try {
+      return insightProfileService.listProfileStatuses(Array.isArray(sessionIds) ? sessionIds : [])
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 生成会话画像
+  // payload: { sessionId, displayName?, avatarUrl? }
+  ipcMain.handle('insight:generateProfile', async (_event, payload: any) => {
+    try {
+      return await insightProfileService.generateProfile(payload)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 取消进行中的画像生成
+  ipcMain.handle('insight:cancelProfile', async (_event, sessionId?: string) => {
+    try {
+      return insightProfileService.cancelProfile(sessionId)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 生成足迹洞察
+  // payload: { rangeLabel, summary, privateSegments?, mentionGroups? }
+  ipcMain.handle('insight:generateFootprintInsight', async (_event, payload: any) => {
+    try {
+      return await insightService.generateFootprintInsight(payload)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 生成消息洞察
+  // payload: { sessionId, displayName?, avatarUrl?, targetLocalId?, targetCreateTime?, targetMessageKey?, targetText, targetSenderName?, contextCount?, forceRefresh? }
+  ipcMain.handle('insight:generateMessageInsight', async (_event, payload: any) => {
+    try {
+      return await insightService.generateMessageInsight(payload)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // === 数据分析（Analytics） ===
+  // 获取总体统计
+  ipcMain.handle('analytics:getOverallStatistics', async (_event, force?: boolean) => {
+    try {
+      return await analyticsService.getOverallStatistics(force === true)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取联系人排行榜
+  // 参数：limit?, beginTimestamp?, endTimestamp?
+  ipcMain.handle('analytics:getContactRankings', async (_event, limit?: number, beginTimestamp?: number, endTimestamp?: number) => {
+    try {
+      return await analyticsService.getContactRankings(limit, beginTimestamp, endTimestamp)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取时间分布
+  ipcMain.handle('analytics:getTimeDistribution', async () => {
+    try {
+      return await analyticsService.getTimeDistribution()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取自发消息的每日分布
+  // 参数：beginTimestamp?, endTimestamp?, force?
+  ipcMain.handle('analytics:getSelfSentDailyDistribution', async (_event, beginTimestamp?: number, endTimestamp?: number, force?: boolean) => {
+    try {
+      return await analyticsService.getSelfSentDailyDistribution(beginTimestamp, endTimestamp, force === true)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取排除的用户名列表
+  ipcMain.handle('analytics:getExcludedUsernames', async () => {
+    try {
+      return await analyticsService.getExcludedUsernames()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 设置排除的用户名列表
+  ipcMain.handle('analytics:setExcludedUsernames', async (_event, usernames: string[]) => {
+    try {
+      return await analyticsService.setExcludedUsernames(Array.isArray(usernames) ? usernames : [])
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取排除候选用户
+  ipcMain.handle('analytics:getExcludeCandidates', async () => {
+    try {
+      return await analyticsService.getExcludeCandidates()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 清空分析缓存（注册在 cache: 命名空间以与 WeFlow 保持一致）
+  ipcMain.handle('cache:clearAnalytics', async () => {
+    try {
+      return await analyticsService.clearCache()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // === 群摘要（GroupSummary） ===
+  // 列出群摘要记录
+  // filters: { sessionId?, startTime?, endTime?, limit?, offset? }
+  ipcMain.handle('groupSummary:listRecords', async (_event, filters?: any) => {
+    try {
+      return groupSummaryService.listRecords(filters || {})
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取单条群摘要记录
+  ipcMain.handle('groupSummary:getRecord', async (_event, id: string) => {
+    try {
+      return groupSummaryService.getRecord(id)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 手动触发生成群摘要
+  // payload: { sessionId, displayName?, avatarUrl?, startTime, endTime }
+  ipcMain.handle('groupSummary:triggerManual', async (_event, payload: any) => {
+    try {
+      return await groupSummaryService.triggerManual(payload)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 按天触发生成群摘要
+  // payload: { sessionId, displayName?, avatarUrl?, date: string }
+  ipcMain.handle('groupSummary:triggerDay', async (_event, payload: any) => {
+    try {
+      return await groupSummaryService.triggerDay(payload)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // === 备份与恢复（Backup） ===
+  // 创建备份
+  // payload: { outputPath: string, options?: { includeImages?, includeVideos?, includeFiles? } }
+  ipcMain.handle('backup:create', async (_event, payload: any) => {
+    try {
+      if (!payload?.outputPath) {
+        return { success: false, error: 'outputPath 不能为空' }
+      }
+      return await backupService.createBackup(payload.outputPath, payload.options || {})
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 检视备份文件（不恢复，仅读取 manifest）
+  // payload: { archivePath: string }
+  ipcMain.handle('backup:inspect', async (_event, payload: any) => {
+    try {
+      if (!payload?.archivePath) {
+        return { success: false, error: 'archivePath 不能为空' }
+      }
+      return await backupService.inspectBackup(payload.archivePath)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 从备份文件恢复
+  // payload: { archivePath: string }
+  ipcMain.handle('backup:restore', async (_event, payload: any) => {
+    try {
+      if (!payload?.archivePath) {
+        return { success: false, error: 'archivePath 不能为空' }
+      }
+      return await backupService.restoreBackup(payload.archivePath)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
     }
   })
 }

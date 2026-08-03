@@ -282,6 +282,100 @@ const electronAPI = {
     isLockMode: () => ipcRenderer.invoke('auth:isLockMode') as Promise<boolean>
   },
 
+  // === AI 对话 ===
+  aiChat: {
+    // 流式对话：增量通过 onChatChunk 回调推送
+    chatWithContext: (
+      requestId: string,
+      context: unknown,
+      userMessage: string
+    ) => ipcRenderer.invoke('aiChat:chatWithContext', requestId, context, userMessage) as Promise<unknown>,
+    abortRequest: (requestId: string) =>
+      ipcRenderer.invoke('aiChat:abortRequest', requestId) as Promise<{ success: boolean; error?: string }>,
+    listSessions: () => ipcRenderer.invoke('aiChat:listSessions') as Promise<unknown>,
+    getSession: (sessionId: string, displayName?: string) =>
+      ipcRenderer.invoke('aiChat:getSession', sessionId, displayName) as Promise<unknown>,
+    clearSessionMessages: (sessionId: string) =>
+      ipcRenderer.invoke('aiChat:clearSessionMessages', sessionId) as Promise<unknown>,
+    deleteSession: (sessionId: string) =>
+      ipcRenderer.invoke('aiChat:deleteSession', sessionId) as Promise<unknown>,
+    listProviderPresets: () => ipcRenderer.invoke('aiChat:listProviderPresets') as Promise<unknown>,
+    applyProviderPreset: (providerId: string) =>
+      ipcRenderer.invoke('aiChat:applyProviderPreset', providerId) as Promise<unknown>,
+    cleanupExpiredSessions: () => ipcRenderer.invoke('aiChat:cleanupExpiredSessions') as Promise<unknown>,
+    // 订阅流式 chunk 推送，返回取消订阅函数
+    onChatChunk: (callback: (requestId: string, chunk: string) => void) => {
+      const listener = (_event: unknown, requestId: string, chunk: string) => callback(requestId, chunk)
+      ipcRenderer.on('aiChat:chatChunk', listener)
+      return () => ipcRenderer.off('aiChat:chatChunk', listener)
+    }
+  },
+
+  // === AI 见解（Insight） ===
+  insight: {
+    testConnection: () => ipcRenderer.invoke('insight:testConnection') as Promise<unknown>,
+    getTodayStats: () => ipcRenderer.invoke('insight:getTodayStats') as Promise<unknown>,
+    listRecords: (filters?: unknown) => ipcRenderer.invoke('insight:listRecords', filters) as Promise<unknown>,
+    getRecord: (id: string) => ipcRenderer.invoke('insight:getRecord', id) as Promise<unknown>,
+    markRecordRead: (id: string) => ipcRenderer.invoke('insight:markRecordRead', id) as Promise<unknown>,
+    clearRecords: (filters?: unknown) => ipcRenderer.invoke('insight:clearRecords', filters) as Promise<unknown>,
+    triggerTest: () => ipcRenderer.invoke('insight:triggerTest') as Promise<unknown>,
+    triggerSessionInsight: (payload: unknown) =>
+      ipcRenderer.invoke('insight:triggerSessionInsight', payload) as Promise<unknown>,
+    listProfileStatuses: (sessionIds: string[]) =>
+      ipcRenderer.invoke('insight:listProfileStatuses', sessionIds) as Promise<unknown>,
+    generateProfile: (payload: unknown) =>
+      ipcRenderer.invoke('insight:generateProfile', payload) as Promise<unknown>,
+    cancelProfile: (sessionId?: string) =>
+      ipcRenderer.invoke('insight:cancelProfile', sessionId) as Promise<unknown>,
+    generateFootprintInsight: (payload: unknown) =>
+      ipcRenderer.invoke('insight:generateFootprintInsight', payload) as Promise<unknown>,
+    generateMessageInsight: (payload: unknown) =>
+      ipcRenderer.invoke('insight:generateMessageInsight', payload) as Promise<unknown>
+  },
+
+  // === 数据分析（Analytics） ===
+  analytics: {
+    getOverallStatistics: (force?: boolean) =>
+      ipcRenderer.invoke('analytics:getOverallStatistics', force) as Promise<unknown>,
+    getContactRankings: (limit?: number, beginTimestamp?: number, endTimestamp?: number) =>
+      ipcRenderer.invoke('analytics:getContactRankings', limit, beginTimestamp, endTimestamp) as Promise<unknown>,
+    getTimeDistribution: () => ipcRenderer.invoke('analytics:getTimeDistribution') as Promise<unknown>,
+    getSelfSentDailyDistribution: (beginTimestamp?: number, endTimestamp?: number, force?: boolean) =>
+      ipcRenderer.invoke(
+        'analytics:getSelfSentDailyDistribution',
+        beginTimestamp,
+        endTimestamp,
+        force
+      ) as Promise<unknown>,
+    getExcludedUsernames: () => ipcRenderer.invoke('analytics:getExcludedUsernames') as Promise<unknown>,
+    setExcludedUsernames: (usernames: string[]) =>
+      ipcRenderer.invoke('analytics:setExcludedUsernames', usernames) as Promise<unknown>,
+    getExcludeCandidates: () => ipcRenderer.invoke('analytics:getExcludeCandidates') as Promise<unknown>,
+    clearCache: () => ipcRenderer.invoke('cache:clearAnalytics') as Promise<unknown>
+  },
+
+  // === 群摘要（GroupSummary） ===
+  groupSummary: {
+    listRecords: (filters?: unknown) =>
+      ipcRenderer.invoke('groupSummary:listRecords', filters) as Promise<unknown>,
+    getRecord: (id: string) => ipcRenderer.invoke('groupSummary:getRecord', id) as Promise<unknown>,
+    triggerManual: (payload: unknown) =>
+      ipcRenderer.invoke('groupSummary:triggerManual', payload) as Promise<unknown>,
+    triggerDay: (payload: unknown) =>
+      ipcRenderer.invoke('groupSummary:triggerDay', payload) as Promise<unknown>
+  },
+
+  // === 备份与恢复（Backup） ===
+  backup: {
+    create: (payload: { outputPath: string; options?: unknown }) =>
+      ipcRenderer.invoke('backup:create', payload) as Promise<unknown>,
+    inspect: (payload: { archivePath: string }) =>
+      ipcRenderer.invoke('backup:inspect', payload) as Promise<unknown>,
+    restore: (payload: { archivePath: string }) =>
+      ipcRenderer.invoke('backup:restore', payload) as Promise<unknown>
+  },
+
   // 系统平台
   platform: process.platform
 } as const

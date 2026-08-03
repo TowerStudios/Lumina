@@ -15,12 +15,14 @@ import {
 } from 'lucide-react'
 import './OnboardingPage.scss'
 
-// === 后端返回类型（与 dbPathService / wcdbService 对齐） ===
+// === 后端返回类型（与 dbPathService / ScanWxidsResult 对齐） ===
 interface WxidInfo {
   wxid: string
-  modifiedTime: number
+  displayName?: string
   nickname?: string
   avatarUrl?: string
+  accountDir: string
+  lastModified?: number
 }
 
 interface OnboardingPageProps {
@@ -117,10 +119,11 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     setWxids([])
     setSelectedWxid(null)
     try {
-      const list = (await window.electronAPI?.dbpath?.scanWxids(path)) as WxidInfo[] | undefined
+      const result = await window.electronAPI?.dbpath?.scanWxids(path)
+      const list = result?.success ? (result.wxids ?? []) : []
       if (Array.isArray(list) && list.length > 0) {
         // 按修改时间倒序（最近使用的在前）
-        const sorted = [...list].sort((a, b) => b.modifiedTime - a.modifiedTime)
+        const sorted = [...list].sort((a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0))
         setWxids(sorted)
       } else {
         setScanError('未在该目录下扫描到微信账号，请确认目录正确')
