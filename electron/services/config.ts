@@ -144,6 +144,19 @@ interface ConfigSchema {
   aiInsightDebugLogEnabled: boolean
   autoDownloadHighRes: boolean
   autoDownloadWhitelist: string[]
+
+  // 会话本地状态（用户在 Lumina 内的置顶/静音/归档/标记未读，不回写微信）
+  // key 为 sessionId，value 为该会话的本地状态覆盖
+  sessionStates: Record<string, SessionState>
+}
+
+/** 单个会话的本地状态覆盖（不回写微信数据库） */
+export interface SessionState {
+  isPinned?: boolean
+  isMuted?: boolean
+  isArchived?: boolean
+  /** 用户主动标记为未读（覆盖后端 unreadCount=0 为 1） */
+  markedUnread?: boolean
 }
 
 // 需要 safeStorage 加密的字段（普通模式）
@@ -284,7 +297,8 @@ export class ConfigService {
       aiMessageInsightSystemPrompt: '',
       aiInsightDebugLogEnabled: false,
       autoDownloadHighRes: false,
-      autoDownloadWhitelist: []
+      autoDownloadWhitelist: [],
+      sessionStates: {}
     }
 
     const storeOptions: any = {

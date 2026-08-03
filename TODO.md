@@ -46,18 +46,18 @@
 ## 2. 中优先级 - 聊天功能增强
 
 ### 2.1 消息搜索
-- [ ] 调用 `chat.searchMessages` 实现全局/会话内搜索
-- [ ] 搜索结果高亮关键词
-- [ ] 点击搜索结果跳转到对应消息位置
+- [x] 调用 `chat.searchMessages` 实现全局/会话内搜索（全局搜索已实现，会话内搜索待做）
+- [x] 搜索结果高亮关键词（首个匹配高亮 + 内容片段截取）
+- [ ] 点击搜索结果跳转到对应消息位置（当前仅跳转到会话，未定位具体消息，需 ChatView 支持 scrollToMessage）
 
 ### 2.2 会话右键菜单功能对接
-- [ ] 置顶/取消置顶（持久化到后端，不仅是前端状态）
-- [ ] 标记已读/未读
-- [ ] 静音/取消静音
-- [ ] 归档/取消归档
-- [ ] 清空聊天记录
-- [ ] 删除会话
-- [ ] 查看资料
+- [x] 置顶/取消置顶（持久化到 config.sessionStates，不回写微信）
+- [x] 标记已读/未读（markedUnread 状态持久化）
+- [x] 静音/取消静音（持久化）
+- [x] 归档/取消归档（持久化）
+- [x] 清空聊天记录（清空内存消息，不删除数据库原始记录）
+- [x] 删除会话（清空内存消息 + 取消选中）
+- [x] 查看资料（打开详情面板）
 
 ### 2.3 媒体消息预览
 - [ ] 图片消息解密与预览（调用 `image:decrypt` IPC，dat → jpg/png）
@@ -126,7 +126,7 @@
 ## 5. 数据层与工程
 
 - [ ] 配置文件迁移验证（Lumina-config.json 中 safe: 加密字段解密）
-- [ ] ChatSession.isPinned/isMuted/isArchived 持久化到后端
+- [x] ChatSession.isPinned/isMuted/isArchived/markedUnread 持久化到 config.sessionStates
 - [ ] 消息状态同步（sending/sent/read 流程）
 - [ ] mockChatData.ts 清理（确认无引用后删除）
 

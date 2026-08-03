@@ -40,11 +40,19 @@ export function ChatListContextMenu() {
   const closeContextMenu = useUIStore((s) => s.closeContextMenu)
   const setActiveChatId = useUIStore((s) => s.setActiveChatId)
   const setDetailPanelOpen = useUIStore((s) => s.setDetailPanelOpen)
+
+  // === 从 chatStore 读取会话与持久化 actions ===
   const sessions = useChatStore((s) => s.sessions)
-  const [localPinned, setLocalPinned] = useState<Record<string, boolean>>({})
-  const [localUnread, setLocalUnread] = useState<Record<string, number>>({})
-  const [localMuted, setLocalMuted] = useState<Record<string, boolean>>({})
-  const [localArchived, setLocalArchived] = useState<Record<string, boolean>>({})
+  const pinnedMap = useChatStore((s) => s.pinnedMap)
+  const mutedMap = useChatStore((s) => s.mutedMap)
+  const archivedMap = useChatStore((s) => s.archivedMap)
+  const markedUnreadMap = useChatStore((s) => s.markedUnreadMap)
+  const markSessionRead = useChatStore((s) => s.markSessionRead)
+  const markSessionUnread = useChatStore((s) => s.markSessionUnread)
+  const togglePinAction = useChatStore((s) => s.togglePin)
+  const toggleMuteAction = useChatStore((s) => s.toggleMute)
+  const toggleArchiveAction = useChatStore((s) => s.toggleArchive)
+  const clearSessionMessages = useChatStore((s) => s.clearSessionMessages)
 
   const menuRef = useRef<HTMLDivElement>(null)
   const [adjustedPos, setAdjustedPos] = useState({ x: 0, y: 0 })
@@ -85,48 +93,50 @@ export function ChatListContextMenu() {
 
   if (!visible || !session) return null
 
-  const isPinned = localPinned[session.id] ?? session.isPinned
-  const unreadCount = localUnread[session.id] ?? session.unreadCount
-  const isMuted = localMuted[session.id] ?? false
-  const isArchived = localArchived[session.id] ?? false
+  // 合并本地状态覆盖（持久化在 chatStore 中完成）
+  const isPinned = pinnedMap[session.id] ?? session.isPinned
+  const isMuted = mutedMap[session.id] ?? session.isMuted
+  const isArchived = archivedMap[session.id] ?? false
+  const markedUnread = markedUnreadMap[session.id] ?? false
+  const isUnread = markedUnread || session.unreadCount > 0
 
   const togglePin = () => {
-    setLocalPinned((p) => ({ ...p, [session.id]: !isPinned }))
+    togglePinAction(session.id)
     closeContextMenu()
   }
 
   const markAsRead = () => {
-    setLocalUnread((p) => ({ ...p, [session.id]: 0 }))
+    markSessionRead(session.id)
     closeContextMenu()
   }
 
   const markAsUnread = () => {
-    setLocalUnread((p) => ({ ...p, [session.id]: 1 }))
+    markSessionUnread(session.id)
     closeContextMenu()
   }
 
   const toggleMute = () => {
-    setLocalMuted((p) => ({ ...p, [session.id]: !isMuted }))
+    toggleMuteAction(session.id)
     closeContextMenu()
   }
 
   const toggleArchive = () => {
-    setLocalArchived((p) => ({ ...p, [session.id]: !isArchived }))
+    toggleArchiveAction(session.id)
     closeContextMenu()
   }
 
   const clearHistory = () => {
     if (window.confirm(`确定要清空 "${session.name}" 的聊天记录吗？此操作不可恢复。`)) {
-      // mock：实际接入业务后通过 IPC 清空数据库记录
-      console.log('[mock] clearHistory:', session.id)
+      // 清空当前已加载的内存消息（不删除数据库原始记录）
+      clearSessionMessages(session.id)
     }
     closeContextMenu()
   }
 
   const deleteChat = () => {
     if (window.confirm(`确定要删除会话 "${session.name}" 吗？聊天记录将被清空。`)) {
-      // mock：实际接入业务后通过 IPC 删除
-      console.log('[mock] deleteChat:', session.id)
+      // 仅清空内存消息并取消选中（不删除数据库原始记录）
+      clearSessionMessages(session.id)
       setActiveChatId(null)
     }
     closeContextMenu()
@@ -147,9 +157,9 @@ export function ChatListContextMenu() {
     },
     {
       id: 'read',
-      label: unreadCount > 0 ? '标记为已读' : '标记为未读',
+      label: isUnread ? '标记为已读' : '标记为未读',
       icon: <CheckCheck size={16} />,
-      onClick: unreadCount > 0 ? markAsRead : markAsUnread,
+      onClick: isUnread ? markAsRead : markAsUnread,
     },
     {
       id: 'mute',

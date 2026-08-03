@@ -84,6 +84,70 @@
         color: var(--text-placeholder);
       }
     }
+
+    &-clear {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+      color: #fff;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+
+      &:hover {
+        background: var(--text-secondary);
+      }
+    }
+  }
+
+  // === 搜索结果分区标签 ===
+  &__section-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__section-spinner {
+    color: var(--text-tertiary);
+    animation: lumina-spin 1s linear infinite;
+  }
+
+  &__section-empty {
+    padding: 8px 16px 12px;
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+
+    &--error {
+      color: var(--danger);
+    }
+  }
+
+  // 关键词高亮
+  &__hit-mark {
+    background: transparent;
+    color: var(--primary, #40a7e3);
+    font-weight: 600;
+    padding: 0;
+  }
+
+  // 搜索结果项（消息命中）
+  &__item--search {
+    .chat-list__preview {
+      color: var(--text-secondary);
+    }
   }
 
   // === 列表容器 ===
