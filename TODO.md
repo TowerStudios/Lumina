@@ -107,13 +107,13 @@
 
 ### 3.2 页面实现
 - [x] ContactsPage - 通讯录（字母分组 + 类型筛选 + 详情面板 + 跳转聊天）
+- [x] SettingsPage 应用锁 UI（密码锁 + Windows Hello，对接 auth.* 设置面板）
+- [x] SettingsPage 开机自启 UI（对接 appFeatures.setLaunchAtStartup 开关）
+- [x] SettingsPage 日志查看 UI（对接 log.read，支持刷新/清空/打开目录）
 - [ ] SnsPage - 朋友圈（含屏蔽用户功能）
 - [ ] AiChatPage - AI 对话
 - [ ] AnalyticsPage - 数据分析（echarts-for-react）
 - [ ] ExportPage - 导出中心
-- [ ] SettingsPage 应用锁 UI（IPC 已就绪，需对接 auth.* 设置面板）
-- [ ] SettingsPage 开机自启 UI（IPC 已就绪，需对接 appFeatures.setLaunchAtStartup 开关）
-- [ ] SettingsPage 日志查看 UI（IPC 已就绪，需对接 log.read 显示日志内容）
 
 ---
 
@@ -200,9 +200,9 @@
 6. ⏸ 朋友圈 IPC（sns:*）- 依赖 dialog 和 trigger 机制，推迟到 P4 阶段
 
 **P1 - SettingsPage UI 对接（IPC 全部已就绪）**
-6. SettingsPage 应用锁 UI（密码锁 + Windows Hello，对接 auth.*）
-7. SettingsPage 开机自启 UI（对接 appFeatures.setLaunchAtStartup）
-8. SettingsPage 日志查看 UI（对接 log.read，支持清空按钮）
+6. ✅ SettingsPage 应用锁 UI（密码锁 + Windows Hello，对接 auth.*）
+7. ✅ SettingsPage 开机自启 UI（对接 appFeatures.setLaunchAtStartup）
+8. ✅ SettingsPage 日志查看 UI（对接 log.read，支持刷新/清空/打开目录）
 
 **P2 - ChatView 媒体 UI（IPC 全部已就绪）**
 9. 视频消息 UI（对接 video:decode，含封面 + 播放按钮）

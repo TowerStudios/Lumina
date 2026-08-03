@@ -318,6 +318,248 @@
   &__spinner {
     animation: settings-spin 0.8s linear infinite;
   }
+
+  // === 应用锁 ===
+  &__lock {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 4px 16px 16px;
+  }
+
+  &__lock-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--divider-color);
+    font-size: var(--font-size-sm);
+
+    &:last-of-type {
+      border-bottom: none;
+    }
+  }
+
+  &__lock-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px;
+  }
+
+  &__lock-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--input-border-fg, #e0e0e0);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:not(:disabled):hover {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    &--primary {
+      color: var(--primary-on, #fff);
+      background: var(--primary, #40a7e3);
+      border-color: var(--primary, #40a7e3);
+
+      &:hover {
+        opacity: 0.85;
+      }
+    }
+  }
+
+  &__lock-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+  }
+
+  &__lock-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__lock-input {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--input-border-fg, #e0e0e0);
+    border-radius: var(--radius-sm);
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary, #40a7e3);
+    }
+  }
+
+  &__lock-error {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-xs);
+    color: #d84d4d;
+  }
+
+  &__lock-form-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  // === 通用（开机自启等开关） ===
+  &__general {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: 4px 16px;
+  }
+
+  &__toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--divider-color);
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__toggle-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-secondary);
+  }
+
+  &__toggle-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__toggle-title {
+    font-size: var(--font-size-md);
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  &__toggle-desc {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+  }
+
+  &__switch {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: var(--input-border-fg, #c7c7c7);
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+
+    &--on {
+      background: var(--primary, #40a7e3);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+
+    .settings-page__switch--on & {
+      transform: translateX(16px);
+    }
+  }
+
+  // === 日志 ===
+  &__log {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  &__log-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    text-align: left;
+
+    &:hover {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+    }
+  }
+
+  &__log-path {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__log-body {
+    border-top: 1px solid var(--divider-color);
+    padding: 12px 16px;
+  }
+
+  &__log-actions {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  &__log-content {
+    margin: 0;
+    padding: 12px;
+    max-height: 360px;
+    overflow: auto;
+    background: var(--bg-primary);
+    border-radius: var(--radius-sm);
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
 }
 
 @keyframes settings-spin {
