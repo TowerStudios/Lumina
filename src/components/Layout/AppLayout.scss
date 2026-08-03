@@ -1,0 +1,36 @@
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--bg-primary);
+  // === WeFlow 风格圆角窗口 ===
+  // 外层圆角：最大化时取消以贴边显示
+  border-radius: 10px;
+  // 自定义阴影替代系统窗口阴影（hasShadow: false）
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 18px 50px -12px rgba(0, 0, 0, 0.45);
+  // 裁剪内部内容到圆角内
+  isolation: isolate;
+
+  &__body {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+.app-layout--maximized {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+  &__main {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    position: relative;
+  }
+}

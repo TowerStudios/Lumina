@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+dist-electron/
+release/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Runtime data
+cache/
+temp/
+.tmp/
+
+# Electron builder
+*.unpacked
+
+# Reference source code (WeFlow / Lumina snapshot, not part of this project)
+reference/
+
+# Bundled Node.js runtime (too large, not source code)
+.node-v22/
+.node-v22.zip
+
+# Patched DLL backups
+*.bak
+
+# Mock server certificates
+scripts/cert.*
+

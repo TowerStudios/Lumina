@@ -1,0 +1,766 @@
+// ============================================
+// Lumina Design Tokens
+// 三层架构：primitive → semantic → component
+// 作者：MarkCKB
+// ============================================
+
+// === Layer 1: Primitive Tokens (原始色板) ===
+// 不直接使用，作为语义层的引用源
+
+// --- 中性色 ---
+$color-black: #000000;
+$color-white: #ffffff;
+$color-transparent: transparent;
+
+// --- Light Theme Primitives (浅色主题原始色) ---
+$light-window-bg: #ffffff;
+$light-window-fg: #000000;
+$light-window-bg-over: #f5f5f5;
+$light-window-bg-ripple: #ededed;
+$light-window-fg-over: $light-window-fg;
+$light-window-sub-text-fg: #999999;
+$light-window-sub-text-fg-over: #919191;
+$light-window-bold-fg: #222222;
+$light-window-bold-fg-over: #222222;
+$light-window-bg-active: #40a7e3;
+$light-window-fg-active: #ffffff;
+$light-window-active-text-fg: #168acd;
+$light-window-shadow-fg: #000000;
+$light-shadow-fg: rgba(0, 0, 0, 0.094);
+$light-image-bg: #000000;
+$light-image-bg-transparent: #ffffff;
+
+// 浅色 - 按钮
+$light-active-button-bg: $light-window-bg-active;
+$light-active-button-bg-over: #39a5db;
+$light-active-button-bg-ripple: #2095d0;
+$light-active-button-fg: $light-window-fg-active;
+$light-light-button-bg: $light-window-bg;
+$light-light-button-bg-over: #e3f1fa;
+$light-light-button-bg-ripple: #c9e4f6;
+$light-light-button-fg: $light-window-active-text-fg;
+$light-attention-button-fg: #d14e4e;
+$light-attention-button-bg-over: #fcdfde;
+$light-attention-button-bg-ripple: #f4c3c2;
+
+// 浅色 - 菜单/滚动条
+$light-menu-bg: $light-window-bg;
+$light-menu-bg-over: $light-window-bg-over;
+$light-menu-bg-ripple: $light-window-bg-ripple;
+$light-menu-icon-fg: #999999;
+$light-menu-icon-fg-over: #8a8a8a;
+$light-menu-separator-fg: #f1f1f1;
+$light-scroll-bar-bg: rgba(0, 0, 0, 0.327);
+$light-scroll-bar-bg-over: rgba(0, 0, 0, 0.478);
+$light-scroll-bg: rgba(0, 0, 0, 0.102);
+$light-scroll-bg-over: rgba(0, 0, 0, 0.173);
+
+// 浅色 - 输入框
+$light-placeholder-fg: $light-window-sub-text-fg;
+$light-placeholder-fg-active: #aaaaaa;
+$light-input-border-fg: #e0e0e0;
+$light-filter-input-border-fg: #54c3f3;
+$light-filter-input-active-bg: $light-window-bg;
+$light-filter-input-inactive-bg: $light-window-bg-over;
+$light-checkbox-fg: #b3b3b3;
+
+// 浅色 - 弹层/弹窗
+$light-layer-bg: rgba(0, 0, 0, 0.498);
+$light-box-bg: $light-window-bg;
+$light-box-text-fg: $light-window-fg;
+$light-box-text-fg-good: #4ab44a;
+$light-box-text-fg-error: #d84d4d;
+$light-box-title-fg: #404040;
+$light-box-divider-bg: $light-window-bg-over;
+
+// 浅色 - 会话列表
+$light-dialogs-bg: $light-window-bg;
+$light-dialogs-bg-over: $light-window-bg-over;
+$light-dialogs-bg-active: #419fd9;
+$light-dialogs-name-fg: $light-window-bold-fg;
+$light-dialogs-name-fg-over: $light-window-bold-fg-over;
+$light-dialogs-date-fg: $light-window-sub-text-fg;
+$light-dialogs-text-fg: $light-window-sub-text-fg;
+$light-dialogs-text-fg-service: $light-window-active-text-fg;
+$light-dialogs-draft-fg: #dd4b39;
+$light-dialogs-sent-icon-fg: #5dc452;
+$light-dialogs-sending-icon-fg: #c1c1c1;
+$light-dialogs-unread-bg: $light-window-bg-active;
+$light-dialogs-unread-bg-muted: #bbbbbb;
+$light-dialogs-unread-fg: $light-window-fg-active;
+$light-dialogs-online-badge-fg: #4dc920;
+$light-dialogs-ripple-bg: $light-window-bg-ripple;
+$light-dialogs-ripple-bg-active: $light-active-button-bg-ripple;
+
+// 浅色 - 消息历史
+$light-top-bar-bg: $light-window-bg;
+$light-history-text-in-fg: $light-window-fg;
+$light-history-text-out-fg: $light-window-fg;
+$light-history-link-in-fg: $light-window-active-text-fg;
+$light-history-link-out-fg: $light-window-active-text-fg;
+$light-history-out-icon-fg: #57b84c;
+$light-history-out-icon-fg-selected: #45a3aa;
+$light-history-sending-icon-fg: #98d292;
+$light-history-unread-bar-bg: #fcfbfa;
+$light-history-unread-bar-fg: #538bb4;
+$light-history-to-down-bg: $light-window-bg;
+$light-history-to-down-bg-over: $light-window-bg-over;
+$light-history-to-down-fg: $light-menu-icon-fg;
+$light-history-to-down-shadow: rgba(0, 0, 0, 0.251);
+
+// 浅色 - 消息气泡
+$light-msg-in-bg: $light-window-bg;
+$light-msg-in-bg-selected: #c2dcf2;
+$light-msg-out-bg: #effdde;
+$light-msg-out-bg-selected: #b7dbdb;
+$light-msg-in-shadow: rgba(116, 142, 162, 0.161);
+$light-msg-out-shadow: rgba(58, 195, 70, 0.114);
+$light-msg-in-date-fg: #a0acb6;
+$light-msg-out-date-fg: #6db566;
+$light-msg-in-service-fg: $light-window-active-text-fg;
+$light-msg-out-service-fg: #45a32d;
+$light-msg-in-reply-bar-color: #37a1de;
+$light-msg-out-reply-bar-color: #5eb854;
+
+// 浅色 - 输入区
+$light-history-compose-area-bg: $light-msg-in-bg;
+$light-history-compose-icon-fg: $light-menu-icon-fg;
+$light-history-compose-icon-fg-over: $light-menu-icon-fg-over;
+$light-history-send-icon-fg: $light-window-bg-active;
+$light-history-reply-icon-fg: $light-window-bg-active;
+
+// 浅色 - 表情面板
+$light-emoji-pan-bg: $light-window-bg;
+$light-emoji-pan-categories: #f7f7f7;
+$light-emoji-pan-header-fg: $light-window-sub-text-fg;
+$light-emoji-icon-fg: #999999;
+
+// 浅色 - 工具提示
+$light-tooltip-bg: #eef2f5;
+$light-tooltip-fg: #5d6c80;
+$light-tooltip-border-fg: #c9d1db;
+
+// 浅色 - 标题栏
+$light-title-bg: $light-window-bg-over;
+$light-title-bg-active: $light-title-bg;
+$light-title-button-fg: #ababab;
+$light-title-button-fg-over: #9a9a9a;
+$light-title-button-close-bg-over: #e81123;
+$light-title-fg: #acacac;
+$light-title-fg-active: #3e3c3e;
+
+// 浅色 - 通知 Toast
+$light-toast-bg: rgba(44, 48, 51, 0.898);
+$light-toast-fg: $light-window-fg-active;
+
+// --- Dark Theme Primitives (深色主题原始色) ---
+$dark-window-bg: #17212b;
+$dark-window-fg: #f5f5f5;
+$dark-window-bg-over: #232e3c;
+$dark-window-bg-ripple: #24303d;
+$dark-window-fg-over: #e9ecf0;
+$dark-window-sub-text-fg: #708499;
+$dark-window-sub-text-fg-over: #7c90a4;
+$dark-window-bold-fg: #e9e8e8;
+$dark-window-bold-fg-over: #e9e9e9;
+$dark-window-bg-active: #5288c1;
+$dark-window-fg-active: #ffffff;
+$dark-window-active-text-fg: #6ab3f3;
+$dark-window-shadow-fg: #000000;
+$dark-shadow-fg: rgba(4, 8, 14, 0.337);
+$dark-image-bg: #000000;
+$dark-image-bg-transparent: #ffffff;
+
+// 深色 - 按钮
+$dark-active-button-bg: #2f6ea5;
+$dark-active-button-bg-over: #3476ab;
+$dark-active-button-bg-ripple: #3b7cb1;
+$dark-active-button-fg: #ffffff;
+$dark-light-button-bg: $dark-window-bg;
+$dark-light-button-bg-over: #1d2a39;
+$dark-light-button-bg-ripple: #223143;
+$dark-light-button-fg: #6ab2f2;
+$dark-attention-button-fg: #ec3942;
+$dark-attention-button-bg-over: rgba(89, 42, 42, 0.392);
+$dark-attention-button-bg-ripple: rgba(104, 50, 50, 0.392);
+
+// 深色 - 菜单/滚动条
+$dark-menu-bg: $dark-window-bg;
+$dark-menu-bg-over: #ffffff;
+$dark-menu-bg-ripple: #1f2934;
+$dark-menu-icon-fg: #6c7883;
+$dark-menu-icon-fg-over: #dcdcdc;
+$dark-menu-separator-fg: #232f39;
+$dark-scroll-bar-bg: rgba(255, 255, 255, 0.327);
+$dark-scroll-bar-bg-over: rgba(255, 255, 255, 0.478);
+$dark-scroll-bg: rgba(255, 255, 255, 0.102);
+$dark-scroll-bg-over: rgba(255, 255, 255, 0.173);
+
+// 深色 - 输入框
+$dark-placeholder-fg: #6d7883;
+$dark-placeholder-fg-active: #4f5b67;
+$dark-input-border-fg: #313c49;
+$dark-filter-input-border-fg: #242f3d;
+$dark-filter-input-active-bg: $dark-window-bg;
+$dark-filter-input-inactive-bg: #242f3d;
+$dark-checkbox-fg: #4f6276;
+
+// 深色 - 弹层/弹窗
+$dark-layer-bg: rgba(0, 0, 0, 0.498);
+$dark-box-bg: $dark-window-bg;
+$dark-box-text-fg: $dark-window-fg;
+$dark-box-text-fg-good: #5598db;
+$dark-box-text-fg-error: #dc3d3d;
+$dark-box-title-fg: #ebebeb;
+$dark-box-divider-bg: $dark-window-bg-over;
+
+// 深色 - 会话列表
+$dark-dialogs-bg: $dark-window-bg;
+$dark-dialogs-bg-over: $dark-window-bg-over;
+$dark-dialogs-bg-active: #2b5278;
+$dark-dialogs-name-fg: #f5f5f5;
+$dark-dialogs-name-fg-over: #f5f5f5;
+$dark-dialogs-date-fg: #7f91a4;
+$dark-dialogs-text-fg: #7f91a4;
+$dark-dialogs-text-fg-service: $dark-window-active-text-fg;
+$dark-dialogs-draft-fg: #dd4b39;
+$dark-dialogs-sent-icon-fg: #4cb846;
+$dark-dialogs-sending-icon-fg: #888888;
+$dark-dialogs-unread-bg: #4082bc;
+$dark-dialogs-unread-bg-muted: #3e546a;
+$dark-dialogs-unread-fg: #ffffff;
+$dark-dialogs-online-badge-fg: #4dc920;
+$dark-dialogs-ripple-bg: $dark-window-bg-ripple;
+$dark-dialogs-ripple-bg-active: $dark-active-button-bg-ripple;
+
+// 深色 - 消息历史
+$dark-top-bar-bg: $dark-window-bg;
+$dark-history-text-in-fg: $dark-window-fg;
+$dark-history-text-out-fg: #e4ecf2;
+$dark-history-link-in-fg: $dark-window-active-text-fg;
+$dark-history-link-out-fg: $dark-window-active-text-fg;
+$dark-history-out-icon-fg: #4cb846;
+$dark-history-out-icon-fg-selected: #469992;
+$dark-history-sending-icon-fg: #98d292;
+$dark-history-unread-bar-bg: #1f2c39;
+$dark-history-unread-bar-fg: #7da8d3;
+$dark-history-to-down-bg: $dark-window-bg;
+$dark-history-to-down-bg-over: $dark-window-bg-over;
+$dark-history-to-down-fg: $dark-menu-icon-fg;
+$dark-history-to-down-shadow: rgba(0, 0, 0, 0.251);
+
+// 深色 - 消息气泡
+$dark-msg-in-bg: #182533;
+$dark-msg-in-bg-selected: #2e70a5;
+$dark-msg-out-bg: #2b5278;
+$dark-msg-out-bg-selected: #2e70a5;
+$dark-msg-in-shadow: rgba(116, 142, 162, 0);
+$dark-msg-out-shadow: rgba(0, 0, 0, 0);
+$dark-msg-in-date-fg: #6d7f8f;
+$dark-msg-out-date-fg: #7da8d3;
+$dark-msg-in-service-fg: $dark-window-active-text-fg;
+$dark-msg-out-service-fg: #7da8d3;
+$dark-msg-in-reply-bar-color: #6396cb;
+$dark-msg-out-reply-bar-color: #7da8d3;
+
+// 深色 - 输入区
+$dark-history-compose-area-bg: $dark-window-bg;
+$dark-history-compose-icon-fg: $dark-menu-icon-fg;
+$dark-history-compose-icon-fg-over: $dark-menu-icon-fg-over;
+$dark-history-send-icon-fg: $dark-window-bg-active;
+$dark-history-reply-icon-fg: $dark-window-active-text-fg;
+
+// 深色 - 表情面板
+$dark-emoji-pan-bg: $dark-window-bg;
+$dark-emoji-pan-categories: #1c2733;
+$dark-emoji-pan-header-fg: #72879b;
+$dark-emoji-icon-fg: #72879b;
+
+// 深色 - 工具提示
+$dark-tooltip-bg: #16222d;
+$dark-tooltip-fg: #d4e0ea;
+$dark-tooltip-border-fg: #16222d;
+
+// 深色 - 标题栏
+$dark-title-bg: #1f2936;
+$dark-title-bg-active: #242f3d;
+$dark-title-button-fg: #576673;
+$dark-title-button-fg-over: #e0e0e0;
+$dark-title-button-close-bg-over: #e92539;
+$dark-title-fg: #6a7680;
+$dark-title-fg-active: #91a3b3;
+
+// 深色 - 通知 Toast
+$dark-toast-bg: rgba(44, 48, 51, 0.898);
+$dark-toast-fg: $dark-window-fg-active;
+
+// === Layer 2: Semantic Tokens (语义层 - 通过 CSS 变量提供，运行时切换主题) ===
+
+:root,
+[data-theme='light'] {
+  // 背景层级
+  --bg-primary: #{$light-window-bg};
+  --bg-secondary: #{$light-window-bg-over};
+  --bg-tertiary: #{$light-menu-bg-over};
+  --bg-hover: #{$light-window-bg-over};
+  --bg-ripple: #{$light-window-bg-ripple};
+  --bg-active: #{$light-window-bg-active};
+  --bg-overlay: #{$light-layer-bg};
+
+  // 文字层级
+  --text-primary: #{$light-window-fg};
+  --text-secondary: #{$light-window-sub-text-fg};
+  --text-tertiary: #{$light-window-sub-text-fg-over};
+  --text-bold: #{$light-window-bold-fg};
+  --text-active: #{$light-window-active-text-fg};
+  --text-on-active: #{$light-window-fg-active};
+  --text-placeholder: #{$light-placeholder-fg};
+  --text-placeholder-active: #{$light-placeholder-fg-active};
+
+  // 边框/分割线
+  --border-color: #{$light-input-border-fg};
+  --border-strong: #{$light-window-bg-ripple};
+  --divider-color: #{$light-menu-separator-fg};
+
+  // 主色
+  --primary: #{$light-window-bg-active};
+  --primary-hover: #{$light-active-button-bg-over};
+  --primary-ripple: #{$light-active-button-bg-ripple};
+  --primary-light: #{$light-light-button-bg-over};
+  --primary-on: #{$light-active-button-fg};
+
+  // 危险/警告
+  --danger: #{$light-attention-button-fg};
+  --danger-hover: #{$light-attention-button-bg-over};
+  --danger-ripple: #{$light-attention-button-bg-ripple};
+  --danger-light: rgba(209, 78, 78, 0.08);
+
+  // 成功
+  --success: #{$light-dialogs-sent-icon-fg};
+  --success-light: rgba(93, 196, 82, 0.1);
+
+  // 滚动条
+  --scrollbar-thumb: #{$light-scroll-bar-bg};
+  --scrollbar-thumb-hover: #{$light-scroll-bar-bg-over};
+  --scrollbar-track: #{$light-scroll-bg};
+
+  // 阴影
+  --shadow-color: #{$light-shadow-fg};
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.2);
+
+  // 圆角
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-pill: 999px;
+
+  // 间距
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 32px;
+
+  // 字号
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-md: 13px;
+  --font-size-base: 14px;
+  --font-size-lg: 15px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+
+  // 动画
+  --transition-fast: 0.1s ease;
+  --transition-base: 0.15s ease;
+  --transition-slow: 0.25s ease;
+  --transition-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  // z-index 层级
+  --z-base: 1;
+  --z-sticky: 100;
+  --z-drawer: 1000;
+  --z-modal: 2000;
+  --z-titlebar: 2100;
+  --z-toast: 3000;
+  --z-tooltip: 4000;
+}
+
+[data-theme='dark'] {
+  // 背景层级
+  --bg-primary: #{$dark-window-bg};
+  --bg-secondary: #{$dark-window-bg-over};
+  --bg-tertiary: #{$dark-menu-bg-over};
+  --bg-hover: #{$dark-window-bg-over};
+  --bg-ripple: #{$dark-window-bg-ripple};
+  --bg-active: #{$dark-window-bg-active};
+  --bg-overlay: #{$dark-layer-bg};
+
+  // 文字层级
+  --text-primary: #{$dark-window-fg};
+  --text-secondary: #{$dark-window-sub-text-fg};
+  --text-tertiary: #{$dark-window-sub-text-fg-over};
+  --text-bold: #{$dark-window-bold-fg};
+  --text-active: #{$dark-window-active-text-fg};
+  --text-on-active: #{$dark-window-fg-active};
+  --text-placeholder: #{$dark-placeholder-fg};
+  --text-placeholder-active: #{$dark-placeholder-fg-active};
+
+  // 边框/分割线
+  --border-color: #{$dark-input-border-fg};
+  --border-strong: #{$dark-window-bg-ripple};
+  --divider-color: #{$dark-menu-separator-fg};
+
+  // 主色
+  --primary: #{$dark-window-bg-active};
+  --primary-hover: #{$dark-active-button-bg-over};
+  --primary-ripple: #{$dark-active-button-bg-ripple};
+  --primary-light: #{$dark-light-button-bg-over};
+  --primary-on: #{$dark-active-button-fg};
+
+  // 危险/警告
+  --danger: #{$dark-attention-button-fg};
+  --danger-hover: #{$dark-attention-button-bg-over};
+  --danger-ripple: #{$dark-attention-button-bg-ripple};
+  --danger-light: rgba(236, 57, 66, 0.08);
+
+  // 成功
+  --success: #{$dark-dialogs-sent-icon-fg};
+  --success-light: rgba(76, 184, 70, 0.1);
+
+  // 滚动条
+  --scrollbar-thumb: #{$dark-scroll-bar-bg};
+  --scrollbar-thumb-hover: #{$dark-scroll-bar-bg-over};
+  --scrollbar-track: #{$dark-scroll-bg};
+
+  // 阴影
+  --shadow-color: #{$dark-shadow-fg};
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+// === Layer 3: Component Tokens (组件层 - 引用语义变量) ===
+
+:root,
+[data-theme='light'] {
+  // 会话列表
+  --dialogs-bg: #{$light-dialogs-bg};
+  --dialogs-bg-hover: #{$light-dialogs-bg-over};
+  --dialogs-bg-active: #{$light-dialogs-bg-active};
+  --dialogs-name-fg: #{$light-dialogs-name-fg};
+  --dialogs-name-fg-active: #{$light-window-fg-active};
+  --dialogs-date-fg: #{$light-dialogs-date-fg};
+  --dialogs-text-fg: #{$light-dialogs-text-fg};
+  --dialogs-draft-fg: #{$light-dialogs-draft-fg};
+  --dialogs-sent-icon: #{$light-dialogs-sent-icon-fg};
+  --dialogs-unread-bg: #{$light-dialogs-unread-bg};
+  --dialogs-unread-bg-muted: #{$light-dialogs-unread-bg-muted};
+  --dialogs-unread-fg: #{$light-dialogs-unread-fg};
+  --dialogs-online-badge: #{$light-dialogs-online-badge-fg};
+  --dialogs-ripple: #{$light-dialogs-ripple-bg};
+
+  // 顶栏
+  --topbar-bg: #{$light-top-bar-bg};
+
+  // 消息气泡
+  --bubble-in-bg: #{$light-msg-in-bg};
+  --bubble-in-bg-selected: #{$light-msg-in-bg-selected};
+  --bubble-in-shadow: #{$light-msg-in-shadow};
+  --bubble-in-text: #{$light-history-text-in-fg};
+  --bubble-in-link: #{$light-history-link-in-fg};
+  --bubble-in-date: #{$light-msg-in-date-fg};
+  --bubble-in-reply-bar: #{$light-msg-in-reply-bar-color};
+  --bubble-in-service-fg: #{$light-msg-in-service-fg};
+  --bubble-out-bg: #{$light-msg-out-bg};
+  --bubble-out-bg-selected: #{$light-msg-out-bg-selected};
+  --bubble-out-shadow: #{$light-msg-out-shadow};
+  --bubble-out-text: #{$light-history-text-out-fg};
+  --bubble-out-link: #{$light-history-link-out-fg};
+  --bubble-out-date: #{$light-msg-out-date-fg};
+  --bubble-out-reply-bar: #{$light-msg-out-reply-bar-color};
+  --bubble-out-service-fg: #{$light-msg-out-service-fg};
+
+  // 消息状态
+  --msg-out-icon: #{$light-history-out-icon-fg};
+  --msg-out-icon-selected: #{$light-history-out-icon-fg-selected};
+  --msg-sending-icon: #{$light-history-sending-icon-fg};
+  --msg-unread-bar-bg: #{$light-history-unread-bar-bg};
+  --msg-unread-bar-fg: #{$light-history-unread-bar-fg};
+
+  // 滚动到底部按钮
+  --to-down-bg: #{$light-history-to-down-bg};
+  --to-down-bg-hover: #{$light-history-to-down-bg-over};
+  --to-down-fg: #{$light-history-to-down-fg};
+  --to-down-shadow: #{$light-history-to-down-shadow};
+
+  // 输入区
+  --compose-bg: #{$light-history-compose-area-bg};
+  --compose-icon: #{$light-history-compose-icon-fg};
+  --compose-icon-hover: #{$light-history-compose-icon-fg-over};
+  --compose-send-icon: #{$light-history-send-icon-fg};
+  --compose-reply-icon: #{$light-history-reply-icon-fg};
+
+  // 表情面板
+  --emoji-pan-bg: #{$light-emoji-pan-bg};
+  --emoji-pan-categories: #{$light-emoji-pan-categories};
+  --emoji-pan-header-fg: #{$light-emoji-pan-header-fg};
+  --emoji-icon: #{$light-emoji-icon-fg};
+
+  // 弹窗
+  --box-bg: #{$light-box-bg};
+  --box-text: #{$light-box-text-fg};
+  --box-title: #{$light-box-title-fg};
+  --box-text-good: #{$light-box-text-fg-good};
+  --box-text-error: #{$light-box-text-fg-error};
+  --box-divider: #{$light-box-divider-bg};
+
+  // Tooltip
+  --tooltip-bg: #{$light-tooltip-bg};
+  --tooltip-fg: #{$light-tooltip-fg};
+  --tooltip-border: #{$light-tooltip-border-fg};
+
+  // 标题栏
+  --titlebar-bg: #{$light-title-bg};
+  --titlebar-bg-active: #{$light-title-bg-active};
+  --titlebar-button-fg: #{$light-title-button-fg};
+  --titlebar-button-fg-hover: #{$light-title-button-fg-over};
+  --titlebar-close-bg-hover: #{$light-title-button-close-bg-over};
+  --titlebar-fg: #{$light-title-fg};
+  --titlebar-fg-active: #{$light-title-fg-active};
+
+  // Toast 通知
+  --toast-bg: #{$light-toast-bg};
+  --toast-fg: #{$light-toast-fg};
+}
+
+[data-theme='dark'] {
+  // 会话列表
+  --dialogs-bg: #{$dark-dialogs-bg};
+  --dialogs-bg-hover: #{$dark-dialogs-bg-over};
+  --dialogs-bg-active: #{$dark-dialogs-bg-active};
+  --dialogs-name-fg: #{$dark-dialogs-name-fg};
+  --dialogs-name-fg-active: #{$dark-window-fg-active};
+  --dialogs-date-fg: #{$dark-dialogs-date-fg};
+  --dialogs-text-fg: #{$dark-dialogs-text-fg};
+  --dialogs-draft-fg: #{$dark-dialogs-draft-fg};
+  --dialogs-sent-icon: #{$dark-dialogs-sent-icon-fg};
+  --dialogs-unread-bg: #{$dark-dialogs-unread-bg};
+  --dialogs-unread-bg-muted: #{$dark-dialogs-unread-bg-muted};
+  --dialogs-unread-fg: #{$dark-dialogs-unread-fg};
+  --dialogs-online-badge: #{$dark-dialogs-online-badge-fg};
+  --dialogs-ripple: #{$dark-dialogs-ripple-bg};
+
+  // 顶栏
+  --topbar-bg: #{$dark-top-bar-bg};
+
+  // 消息气泡
+  --bubble-in-bg: #{$dark-msg-in-bg};
+  --bubble-in-bg-selected: #{$dark-msg-in-bg-selected};
+  --bubble-in-shadow: #{$dark-msg-in-shadow};
+  --bubble-in-text: #{$dark-history-text-in-fg};
+  --bubble-in-link: #{$dark-history-link-in-fg};
+  --bubble-in-date: #{$dark-msg-in-date-fg};
+  --bubble-in-reply-bar: #{$dark-msg-in-reply-bar-color};
+  --bubble-in-service-fg: #{$dark-msg-in-service-fg};
+  --bubble-out-bg: #{$dark-msg-out-bg};
+  --bubble-out-bg-selected: #{$dark-msg-out-bg-selected};
+  --bubble-out-shadow: #{$dark-msg-out-shadow};
+  --bubble-out-text: #{$dark-history-text-out-fg};
+  --bubble-out-link: #{$dark-history-link-out-fg};
+  --bubble-out-date: #{$dark-msg-out-date-fg};
+  --bubble-out-reply-bar: #{$dark-msg-out-reply-bar-color};
+  --bubble-out-service-fg: #{$dark-msg-out-service-fg};
+
+  // 消息状态
+  --msg-out-icon: #{$dark-history-out-icon-fg};
+  --msg-out-icon-selected: #{$dark-history-out-icon-fg-selected};
+  --msg-sending-icon: #{$dark-history-sending-icon-fg};
+  --msg-unread-bar-bg: #{$dark-history-unread-bar-bg};
+  --msg-unread-bar-fg: #{$dark-history-unread-bar-fg};
+
+  // 滚动到底部按钮
+  --to-down-bg: #{$dark-history-to-down-bg};
+  --to-down-bg-hover: #{$dark-history-to-down-bg-over};
+  --to-down-fg: #{$dark-history-to-down-fg};
+  --to-down-shadow: #{$dark-history-to-down-shadow};
+
+  // 输入区
+  --compose-bg: #{$dark-history-compose-area-bg};
+  --compose-icon: #{$dark-history-compose-icon-fg};
+  --compose-icon-hover: #{$dark-history-compose-icon-fg-over};
+  --compose-send-icon: #{$dark-history-send-icon-fg};
+  --compose-reply-icon: #{$dark-history-reply-icon-fg};
+
+  // 表情面板
+  --emoji-pan-bg: #{$dark-emoji-pan-bg};
+  --emoji-pan-categories: #{$dark-emoji-pan-categories};
+  --emoji-pan-header-fg: #{$dark-emoji-pan-header-fg};
+  --emoji-icon: #{$dark-emoji-icon-fg};
+
+  // 弹窗
+  --box-bg: #{$dark-box-bg};
+  --box-text: #{$dark-box-text-fg};
+  --box-title: #{$dark-box-title-fg};
+  --box-text-good: #{$dark-box-text-fg-good};
+  --box-text-error: #{$dark-box-text-fg-error};
+  --box-divider: #{$dark-box-divider-bg};
+
+  // Tooltip
+  --tooltip-bg: #{$dark-tooltip-bg};
+  --tooltip-fg: #{$dark-tooltip-fg};
+  --tooltip-border: #{$dark-tooltip-border-fg};
+
+  // 标题栏
+  --titlebar-bg: #{$dark-title-bg};
+  --titlebar-bg-active: #{$dark-title-bg-active};
+  --titlebar-button-fg: #{$dark-title-button-fg};
+  --titlebar-button-fg-hover: #{$dark-title-button-fg-over};
+  --titlebar-close-bg-hover: #{$dark-title-button-close-bg-over};
+  --titlebar-fg: #{$dark-title-fg};
+  --titlebar-fg-active: #{$dark-title-fg-active};
+
+  // Toast 通知
+  --toast-bg: #{$dark-toast-bg};
+  --toast-fg: #{$dark-toast-fg};
+}
+
+// === 系统级跟随（如未显式指定主题，跟随系统） ===
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    // 背景层级
+    --bg-primary: #{$dark-window-bg};
+    --bg-secondary: #{$dark-window-bg-over};
+    --bg-tertiary: #{$dark-menu-bg-over};
+    --bg-hover: #{$dark-window-bg-over};
+    --bg-ripple: #{$dark-window-bg-ripple};
+    --bg-active: #{$dark-window-bg-active};
+    --bg-overlay: #{$dark-layer-bg};
+
+    // 文字层级
+    --text-primary: #{$dark-window-fg};
+    --text-secondary: #{$dark-window-sub-text-fg};
+    --text-tertiary: #{$dark-window-sub-text-fg-over};
+    --text-bold: #{$dark-window-bold-fg};
+    --text-active: #{$dark-window-active-text-fg};
+    --text-on-active: #{$dark-window-fg-active};
+    --text-placeholder: #{$dark-placeholder-fg};
+    --text-placeholder-active: #{$dark-placeholder-fg-active};
+
+    // 边框/分割线
+    --border-color: #{$dark-input-border-fg};
+    --border-strong: #{$dark-window-bg-ripple};
+    --divider-color: #{$dark-menu-separator-fg};
+
+    // 主色
+    --primary: #{$dark-window-bg-active};
+    --primary-hover: #{$dark-active-button-bg-over};
+    --primary-ripple: #{$dark-active-button-bg-ripple};
+    --primary-light: #{$dark-light-button-bg-over};
+    --primary-on: #{$dark-active-button-fg};
+
+    // 危险/警告
+    --danger: #{$dark-attention-button-fg};
+    --danger-hover: #{$dark-attention-button-bg-over};
+    --danger-ripple: #{$dark-attention-button-bg-ripple};
+    --danger-light: rgba(236, 57, 66, 0.08);
+
+    // 成功
+    --success: #{$dark-dialogs-sent-icon-fg};
+    --success-light: rgba(76, 184, 70, 0.1);
+
+    // 滚动条
+    --scrollbar-thumb: #{$dark-scroll-bar-bg};
+    --scrollbar-thumb-hover: #{$dark-scroll-bar-bg-over};
+    --scrollbar-track: #{$dark-scroll-bg};
+
+    // 阴影
+    --shadow-color: #{$dark-shadow-fg};
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+
+    // 组件层（同步覆盖）
+    --dialogs-bg: #{$dark-dialogs-bg};
+    --dialogs-bg-hover: #{$dark-dialogs-bg-over};
+    --dialogs-bg-active: #{$dark-dialogs-bg-active};
+    --dialogs-name-fg: #{$dark-dialogs-name-fg};
+    --dialogs-name-fg-active: #{$dark-window-fg-active};
+    --dialogs-date-fg: #{$dark-dialogs-date-fg};
+    --dialogs-text-fg: #{$dark-dialogs-text-fg};
+    --dialogs-draft-fg: #{$dark-dialogs-draft-fg};
+    --dialogs-sent-icon: #{$dark-dialogs-sent-icon-fg};
+    --dialogs-unread-bg: #{$dark-dialogs-unread-bg};
+    --dialogs-unread-bg-muted: #{$dark-dialogs-unread-bg-muted};
+    --dialogs-unread-fg: #{$dark-dialogs-unread-fg};
+    --dialogs-online-badge: #{$dark-dialogs-online-badge-fg};
+    --dialogs-ripple: #{$dark-dialogs-ripple-bg};
+
+    --topbar-bg: #{$dark-top-bar-bg};
+
+    --bubble-in-bg: #{$dark-msg-in-bg};
+    --bubble-in-bg-selected: #{$dark-msg-in-bg-selected};
+    --bubble-in-shadow: #{$dark-msg-in-shadow};
+    --bubble-in-text: #{$dark-history-text-in-fg};
+    --bubble-in-link: #{$dark-history-link-in-fg};
+    --bubble-in-date: #{$dark-msg-in-date-fg};
+    --bubble-in-reply-bar: #{$dark-msg-in-reply-bar-color};
+    --bubble-in-service-fg: #{$dark-msg-in-service-fg};
+    --bubble-out-bg: #{$dark-msg-out-bg};
+    --bubble-out-bg-selected: #{$dark-msg-out-bg-selected};
+    --bubble-out-shadow: #{$dark-msg-out-shadow};
+    --bubble-out-text: #{$dark-history-text-out-fg};
+    --bubble-out-link: #{$dark-history-link-out-fg};
+    --bubble-out-date: #{$dark-msg-out-date-fg};
+    --bubble-out-reply-bar: #{$dark-msg-out-reply-bar-color};
+    --bubble-out-service-fg: #{$dark-msg-out-service-fg};
+
+    --msg-out-icon: #{$dark-history-out-icon-fg};
+    --msg-out-icon-selected: #{$dark-history-out-icon-fg-selected};
+    --msg-sending-icon: #{$dark-history-sending-icon-fg};
+    --msg-unread-bar-bg: #{$dark-history-unread-bar-bg};
+    --msg-unread-bar-fg: #{$dark-history-unread-bar-fg};
+
+    --to-down-bg: #{$dark-history-to-down-bg};
+    --to-down-bg-hover: #{$dark-history-to-down-bg-over};
+    --to-down-fg: #{$dark-history-to-down-fg};
+    --to-down-shadow: #{$dark-history-to-down-shadow};
+
+    --compose-bg: #{$dark-history-compose-area-bg};
+    --compose-icon: #{$dark-history-compose-icon-fg};
+    --compose-icon-hover: #{$dark-history-compose-icon-fg-over};
+    --compose-send-icon: #{$dark-history-send-icon-fg};
+    --compose-reply-icon: #{$dark-history-reply-icon-fg};
+
+    --emoji-pan-bg: #{$dark-emoji-pan-bg};
+    --emoji-pan-categories: #{$dark-emoji-pan-categories};
+    --emoji-pan-header-fg: #{$dark-emoji-pan-header-fg};
+    --emoji-icon: #{$dark-emoji-icon-fg};
+
+    --box-bg: #{$dark-box-bg};
+    --box-text: #{$dark-box-text-fg};
+    --box-title: #{$dark-box-title-fg};
+    --box-text-good: #{$dark-box-text-fg-good};
+    --box-text-error: #{$dark-box-text-fg-error};
+    --box-divider: #{$dark-box-divider-bg};
+
+    --tooltip-bg: #{$dark-tooltip-bg};
+    --tooltip-fg: #{$dark-tooltip-fg};
+    --tooltip-border: #{$dark-tooltip-border-fg};
+
+    --titlebar-bg: #{$dark-title-bg};
+    --titlebar-bg-active: #{$dark-title-bg-active};
+    --titlebar-button-fg: #{$dark-title-button-fg};
+    --titlebar-button-fg-hover: #{$dark-title-button-fg-over};
+    --titlebar-close-bg-hover: #{$dark-title-button-close-bg-over};
+    --titlebar-fg: #{$dark-title-fg};
+    --titlebar-fg-active: #{$dark-title-fg-active};
+
+    --toast-bg: #{$dark-toast-bg};
+    --toast-fg: #{$dark-toast-fg};
+  }
+}

@@ -1,0 +1,130 @@
+// === 会话列表右键菜单 ===
+// 风格：参考 Telegram Desktop 弹出菜单样式
+
+.chat-context-menu {
+  position: fixed;
+  z-index: var(--z-modal);
+  min-width: 200px;
+  max-width: 240px;
+  background: var(--bg-primary);
+  border: 1px solid var(--divider-color);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 6px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  // 动画
+  animation: chat-context-menu-enter 0.12s ease-out;
+
+  @keyframes chat-context-menu-enter {
+    from {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  &__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal);
+    background: transparent;
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  &__header {
+    padding: 6px 12px 4px;
+    border-bottom: 1px solid var(--divider-color);
+    margin-bottom: 4px;
+  }
+
+  &__title {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+    font-weight: 500;
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__items {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    text-align: left;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+
+    &:hover {
+      background: var(--bg-hover);
+    }
+
+    &:active {
+      background: var(--bg-ripple);
+    }
+
+    &--danger {
+      color: var(--danger);
+
+      &:hover {
+        background: var(--danger-light);
+        color: var(--danger);
+      }
+
+      &:active {
+        background: var(--danger-ripple);
+      }
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+
+    .chat-context-menu__item--danger & {
+      color: var(--danger);
+    }
+
+    .chat-context-menu__item:hover & {
+      color: inherit;
+    }
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__divider {
+    height: 1px;
+    background: var(--divider-color);
+    margin: 4px 0;
+  }
+}

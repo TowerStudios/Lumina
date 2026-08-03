@@ -1,0 +1,98 @@
+.chat-module {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+
+  &--single {
+    .chat-module__list,
+    .chat-module__view {
+      width: 100%;
+      flex: 1;
+    }
+  }
+
+  &--medium,
+  &--wide {
+    .chat-module__list {
+      flex-shrink: 0;
+      border-right: 1px solid var(--divider-color);
+    }
+
+    .chat-module__view {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &--wide {
+    .chat-module__detail {
+      flex-shrink: 0;
+    }
+  }
+
+  // 拖动时禁止文本选择，提升体验
+  &--resizing {
+    user-select: none;
+    -webkit-user-select: none;
+    cursor: col-resize;
+
+    * {
+      cursor: col-resize !important;
+      user-select: none !important;
+    }
+  }
+
+  &__list {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  &__view {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  &__detail {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  // === 拖动分隔条 ===
+  // 参考 Telegram ResizeArea：默认细线，hover/active 加粗与高亮
+  &__resize-area {
+    flex-shrink: 0;
+    width: 4px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+    position: relative;
+    z-index: 1;
+    transition: background var(--transition-fast);
+
+    // 拖动条视觉中线
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 1px;
+      transform: translateX(-50%);
+      background: var(--divider-color);
+      transition: background var(--transition-fast), width var(--transition-fast);
+    }
+
+    &:hover::after {
+      background: var(--primary);
+      width: 2px;
+    }
+
+    // 拖动中
+    .chat-module--resizing &::after {
+      background: var(--primary);
+      width: 2px;
+    }
+  }
+}

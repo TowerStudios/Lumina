@@ -1,0 +1,35 @@
+{
+  "name": "@markckb/electron-liquid-glass",
+  "version": "0.3.0",
+  "description": "Low-latency native liquid glass backdrop panels for Electron apps (Windows: DXGI Desktop Duplication + D3D11 + DirectComposition)",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "license": "MIT",
+  "author": "MarkCKB",
+  "keywords": [
+    "electron",
+    "liquid-glass",
+    "glassmorphism",
+    "backdrop",
+    "blur",
+    "native",
+    "directcomposition",
+    "desktop-duplication",
+    "d3d11",
+    "windows"
+  ],
+  "scripts": {
+    "install": "node scripts/install-guard.cjs"
+  },
+  "dependencies": {
+    "node-addon-api": "^8.5.0",
+    "node-gyp-build": "^4.8.4"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "prebuilds/",
+    "scripts/install-guard.cjs",
+    "LICENSE"
+  ]
+}

@@ -1,0 +1,494 @@
+// === Telegram 风格聊天视图 ===
+// 一比一对标 tdesktop/Telegram/SourceFiles/history/
+// 关键特征：
+// 1. 气泡圆角动态组合（single/first/middle/last）
+// 2. 气泡右下角嵌入时间与状态图标（与文字同层）
+// 3. 对方头像在左，组末条显示；自己不显示头像
+// 4. 左右两侧严格分隔，气泡宽度自适应内容（max 70%）
+// 5. 气泡阴影极浅
+// 6. 日期分隔符：内联胶囊徽章
+
+.chat-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: var(--bg-primary);
+  overflow: hidden;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+
+  &--empty {
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__empty-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+  }
+
+  // === 顶栏（TG TopBar）===
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    height: 52px;
+    padding: 0 12px;
+    background: var(--topbar-bg);
+    border-bottom: 1px solid var(--divider-color);
+    flex-shrink: 0;
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  &__back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+  }
+
+  // === 头像 ===
+  &__avatar-wrap {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+  }
+
+  &__avatar,
+  &__avatar--text {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 500;
+    color: #fff;
+    user-select: none;
+    overflow: hidden;
+  }
+
+  &__avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--bg-secondary);
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  &__name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bold);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__status {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    margin-top: 1px;
+  }
+
+  &__action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+
+    &:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+  }
+
+  // === 消息列表区 ===
+  &__messages {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 0;
+    scroll-behavior: smooth;
+  }
+
+  // === 加载状态 ===
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 40px 16px;
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+
+    &--error {
+      color: var(--danger);
+
+      button {
+        padding: 6px 12px;
+        border: 1px solid var(--danger);
+        background: transparent;
+        color: var(--danger);
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-size: var(--font-size-sm);
+
+        &:hover {
+          background: var(--danger-hover);
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  // === 上拉加载更多指示器 ===
+  &__load-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+  }
+
+  &__spinner {
+    animation: lumina-spin 1s linear infinite;
+  }
+
+  // === 输入栏占位 ===
+  &__input-bar {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    background: var(--compose-bg);
+    border-top: 1px solid var(--divider-color);
+  }
+
+  &__input-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+  }
+}
+
+// === 消息列表 ===
+.message-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 16px;
+
+  // 日期分隔符：内联胶囊
+  &__date-sep {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 12px 0 8px;
+
+    span {
+      padding: 4px 12px;
+      font-size: var(--font-size-xs);
+      color: var(--text-on-active);
+      background: var(--dialogs-bg-active);
+      border-radius: var(--radius-pill);
+      font-weight: 500;
+    }
+  }
+}
+
+// === Telegram 圆角常量 ===
+// tdesktop: kLargeRadius = 16px, kSmallRadius = 6px
+$msg-radius-large: 16px;
+$msg-radius-small: 6px;
+
+// === 单条消息行 ===
+.message-item {
+  display: flex;
+  align-items: flex-end; // 头像贴底
+  gap: 8px;
+  margin-bottom: 2px;
+
+  &--pos-first,
+  &--pos-single {
+    margin-top: 8px;
+  }
+
+  &--pos-last,
+  &--pos-single {
+    margin-bottom: 8px;
+  }
+
+  // 对方消息：左对齐
+  &--in {
+    flex-direction: row;
+    justify-content: flex-start;
+  }
+
+  // 自己消息：右对齐
+  &--out {
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+  }
+
+  // 撤回/系统消息：居中
+  &--recall,
+  &--system {
+    justify-content: center;
+    margin: 8px 0;
+  }
+
+  &__recall-text,
+  &__system-text {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    background: var(--bg-secondary);
+    padding: 4px 12px;
+    border-radius: var(--radius-pill);
+  }
+
+  // === 头像 ===
+  &__avatar {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    user-select: none;
+
+    &--placeholder {
+      visibility: hidden;
+    }
+
+    &--visible {
+      visibility: visible;
+    }
+
+    &-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &-fallback {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+    }
+  }
+
+  // === 消息体 ===
+  &__body {
+    display: flex;
+    flex-direction: column;
+    max-width: 70%;
+    min-width: 0;
+
+    .message-item--out & {
+      align-items: flex-end;
+    }
+  }
+
+  // === 发送者名（对方组首条）===
+  &__sender {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin: 0 10px 2px;
+    font-weight: 500;
+  }
+
+  // === 气泡 ===
+  &__bubble {
+    position: relative;
+    padding: 6px 10px 8px; // 底部留时间空间
+    font-size: var(--font-size-base);
+    line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.08);
+
+    // === 对方消息（左侧）===
+    &--in {
+      background: var(--bubble-in-bg);
+      color: var(--bubble-in-text);
+
+      &.message-item__bubble--single {
+        border-radius: $msg-radius-large $msg-radius-large $msg-radius-small $msg-radius-large;
+      }
+      &.message-item__bubble--first {
+        border-radius: $msg-radius-large $msg-radius-large $msg-radius-small $msg-radius-small;
+      }
+      &.message-item__bubble--middle {
+        border-radius: $msg-radius-small $msg-radius-large $msg-radius-small $msg-radius-small;
+      }
+      &.message-item__bubble--last {
+        border-radius: $msg-radius-large $msg-radius-large $msg-radius-large $msg-radius-small;
+      }
+    }
+
+    // === 自己消息（右侧）===
+    &--out {
+      background: var(--bubble-out-bg);
+      color: var(--bubble-out-text);
+
+      &.message-item__bubble--single {
+        border-radius: $msg-radius-large $msg-radius-large $msg-radius-large $msg-radius-small;
+      }
+      &.message-item__bubble--first {
+        border-radius: $msg-radius-large $msg-radius-large $msg-radius-small $msg-radius-small;
+      }
+      &.message-item__bubble--middle {
+        border-radius: $msg-radius-large $msg-radius-small $msg-radius-small $msg-radius-large;
+      }
+      &.message-item__bubble--last {
+        border-radius: $msg-radius-large $msg-radius-small $msg-radius-large $msg-radius-large;
+      }
+    }
+  }
+
+  // === 文本内容 ===
+  &__text {
+    white-space: pre-wrap;
+    display: inline;
+
+    // 让时间浮在文字右侧底部
+    .message-item__meta + &,
+    & + .message-item__meta {
+      display: inline;
+    }
+  }
+
+  // === 占位（图片/视频等未实现类型）===
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+    min-height: 32px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+
+    &--media {
+      min-width: 200px;
+      min-height: 150px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+    }
+  }
+
+  &__voice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 60px;
+  }
+
+  // === 链接卡片 ===
+  &__link-card {
+    min-width: 200px;
+  }
+
+  &__link-title {
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    color: var(--bubble-in-link);
+  }
+
+  // === 时间与状态（气泡内右下角 - TG 风格）===
+  &__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    float: right;
+    margin-left: 8px;
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1;
+    color: var(--bubble-in-date);
+    user-select: none;
+    white-space: nowrap;
+    vertical-align: bottom;
+
+    .message-item__bubble--out & {
+      color: var(--bubble-out-date);
+      flex-direction: row-reverse;
+    }
+  }
+
+  &__time {
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__status {
+    display: flex;
+    align-items: center;
+
+    &--sending {
+      color: var(--msg-sending-icon);
+    }
+    &--sent {
+      color: var(--text-tertiary);
+
+      .message-item__bubble--out & {
+        color: var(--bubble-out-date);
+      }
+    }
+    &--read {
+      color: var(--msg-out-icon);
+
+      .message-item__bubble--out & {
+        color: var(--bubble-out-date);
+      }
+    }
+  }
+}
+
+@keyframes lumina-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
