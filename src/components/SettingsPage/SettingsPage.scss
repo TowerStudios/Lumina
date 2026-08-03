@@ -168,6 +168,153 @@
     }
   }
 
+  // === 路径编辑 ===
+  &__datasource-value-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  &__link-btn {
+    flex-shrink: 0;
+    padding: 2px 8px;
+    font-size: var(--font-size-xs);
+    color: var(--primary, #40a7e3);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__path-edit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__path-input {
+    flex: 1;
+    min-width: 0;
+    padding: 4px 8px;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: var(--bg-primary);
+    border: 1px solid var(--input-border-fg, #e0e0e0);
+    border-radius: var(--radius-sm);
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary, #40a7e3);
+    }
+  }
+
+  &__path-btn {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--input-border-fg, #e0e0e0);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+    }
+
+    &--primary {
+      color: var(--primary-on, #fff);
+      background: var(--primary, #40a7e3);
+      border-color: var(--primary, #40a7e3);
+
+      &:hover {
+        opacity: 0.85;
+      }
+    }
+  }
+
+  // === 密钥展示 ===
+  &__key-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__key-value {
+    font-family: 'Consolas', 'Monaco', monospace;
+    letter-spacing: 0.02em;
+  }
+
+  &__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: var(--text-tertiary);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+
+    &:hover {
+      color: var(--text-primary);
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+    }
+  }
+
+  // === 测试连接 ===
+  &__test-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0 0;
+  }
+
+  &__test-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    background: transparent;
+    border: 1px solid var(--input-border-fg, #e0e0e0);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+
+    &:not(:disabled):hover {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__test-result {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: var(--font-size-sm);
+
+    &--ok {
+      color: #4ab44a;
+    }
+
+    &--fail {
+      color: #d84d4d;
+    }
+  }
+
   &__spinner {
     animation: settings-spin 0.8s linear infinite;
   }

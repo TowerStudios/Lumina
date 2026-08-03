@@ -27,16 +27,16 @@
 ## 1. 高优先级 - 代码质量与稳定性
 
 ### 1.1 同步 electron.d.ts 类型声明
-- [ ] 添加 `key` 命名空间（autoGetDbKey / autoGetImageKey / onDbKeyStatus / onImageKeyStatus）
-- [ ] 修正 `dbpath.autoDetect` 返回类型为 `{ success, path?, error? }`
-- [ ] 修正 `chat.getSessions / getMessages` 返回包裹结构类型
-- [ ] 添加 `app.getLogPath` 声明
+- [x] 添加 `key` 命名空间（autoGetDbKey / autoGetImageKey / onDbKeyStatus / onImageKeyStatus）
+- [x] 修正 `dbpath.autoDetect` 返回类型为 `{ success, path?, error? }`
+- [x] 修正 `chat.getSessions / getMessages` 返回包裹结构类型
+- [x] 添加 `app.getLogPath` 声明
 - [ ] 删除与 preload.ts 重复的全局声明，统一以 `preload.ts` 的 `typeof electronAPI` 为唯一类型来源
 
 ### 1.2 SettingsPage 业务字段对接
-- [ ] 显示当前解密密钥（脱敏展示，支持修改）
-- [ ] 添加"测试连接"按钮（调用 `wcdb.testConnection`）
-- [ ] 支持数据库路径手动编辑（不只能通过 Onboarding 重走流程）
+- [x] 显示当前解密密钥（脱敏展示，支持修改）
+- [x] 添加"测试连接"按钮（调用 `wcdb.testConnection`）
+- [x] 支持数据库路径手动编辑（不只能通过 Onboarding 重走流程）
 - [ ] 实现应用锁设置（密码锁 + Windows Hello）
 - [ ] 实现多账号管理（扫描/切换/删除账号）
 - [ ] 实现数据与缓存管理（缓存清理、数据备份）

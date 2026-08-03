@@ -50,5 +50,7 @@ reference/
 *.bak
 
 # Mock server certificates
+scripts/cert/
 scripts/cert.*
+resources/cert/
 
