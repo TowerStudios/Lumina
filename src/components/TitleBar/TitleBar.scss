@@ -21,12 +21,45 @@
     flex: 0 0 auto;
   }
 
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--titlebar-fg);
+    cursor: pointer;
+    transition: background 0.12s;
+
+    &:hover {
+      background: var(--titlebar-bg-active);
+    }
+  }
+
   &__app-name {
     font-size: var(--font-size-sm);
     font-weight: 500;
     color: var(--titlebar-fg);
     letter-spacing: 0.01em;
-    padding: 0 8px;
+  }
+
+  &__drag-spacer {
+    flex: 1;
+    -webkit-app-region: drag;
+    app-region: drag;
+    height: 100%;
   }
 
   &__center {

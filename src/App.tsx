@@ -8,10 +8,15 @@ function App() {
     const applyTheme = async () => {
       try {
         const current = await window.electronAPI?.theme?.get()
-        const resolved = current === 'dark' ? 'dark' : 'light'
+        // TG 风格默认深色：system 模式下根据系统选择，无配置默认 dark
+        const resolved = current === 'light' ? 'light' : (
+          current === 'system'
+            ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+            : 'dark'
+        )
         document.documentElement.setAttribute('data-theme', resolved)
       } catch {
-        // 降级：跟随系统 CSS 媒体查询（global.scss 已处理）
+        document.documentElement.setAttribute('data-theme', 'dark')
       }
     }
     applyTheme()

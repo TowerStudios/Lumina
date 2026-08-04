@@ -56,6 +56,7 @@ function ChatListInner({ showBackButton, onBack }: ChatListProps) {
   const sessionsError = useChatStore((s) => s.sessionsError)
   const loadSessions = useChatStore((s) => s.loadSessions)
   const markSessionRead = useChatStore((s) => s.markSessionRead)
+  const setPendingTargetMessage = useUIStore((s) => s.setPendingTargetMessage)
 
   // === 全局消息搜索 ===
   const searchResults = useChatStore((s) => s.searchResults)
@@ -142,6 +143,8 @@ function ChatListInner({ showBackButton, onBack }: ChatListProps) {
   const handleSelectSearchHit = (msg: RenderMessage) => {
     if (msg.sessionId) {
       handleSelect(msg.sessionId)
+      // 记录待定位消息，ChatView 加载完成后滚动到该消息并高亮
+      setPendingTargetMessage({ sessionId: msg.sessionId, messageKey: msg.id })
     }
   }
 

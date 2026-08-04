@@ -729,21 +729,25 @@ export function SettingsPage() {
           </div>
         </section>
 
+        {/* 应用锁 */}
+        <section className="settings-page__section">
+          <h3 className="settings-page__section-title">应用锁</h3>
+          <div className="settings-page__placeholder-row">
+            <span className="settings-page__placeholder-text">密码锁 + Windows Hello（auth IPC 已就绪，UI 待对接）</span>
+          </div>
+        </section>
+
         {/* 关于 */}
         <section className="settings-page__section">
           <h3 className="settings-page__section-title">关于</h3>
           <div className="settings-page__about">
             <div className="settings-page__about-row">
-              <span>应用名称</span>
-              <span>{appName}</span>
+              <span>项目</span>
+              <span>Lumina - 微信聊天记录查看器</span>
             </div>
             <div className="settings-page__about-row">
               <span>版本</span>
               <span>{version}</span>
-            </div>
-            <div className="settings-page__about-row">
-              <span>作者</span>
-              <span>MarkCKB</span>
             </div>
           </div>
         </section>

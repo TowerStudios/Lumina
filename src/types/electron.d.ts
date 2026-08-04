@@ -184,6 +184,12 @@ export interface ElectronAPI {
     getContacts: (options?: { lite?: boolean }) => Promise<ContactsResult>
     getContactAvatar: (username: string, chatroomId?: string) => Promise<AvatarResult | string | null>
     getMyAvatarUrl: () => Promise<AvatarResult | null>
+    getGroupMemberCounts: (
+      chatroomIds: string[]
+    ) => Promise<{ success: boolean; map?: Record<string, number>; error?: string }>
+    getGroupAvatar: (
+      chatroomId: string
+    ) => Promise<{ success: boolean; avatars?: string[]; error?: string }>
     markAllSessionsRead: () => Promise<unknown>
     searchMessages: (
       keyword: string,
@@ -194,6 +200,18 @@ export interface ElectronAPI {
       endTimestamp?: number
     ) => Promise<SearchMessagesResult>
     getImageData: (sessionId: string, msgId: string) => Promise<ImageDataResult>
+    getFileInfo: (
+      sessionId: string,
+      msgId: string
+    ) => Promise<{
+      success: boolean
+      fileName?: string
+      fileSize?: number
+      fileExt?: string
+      fileMd5?: string
+      localPath?: string
+      error?: string
+    }>
   }
 
   // 系统对话框
@@ -231,13 +249,24 @@ export interface ElectronAPI {
     decodeVideo: (
       videoMd5: string,
       options?: { includePoster?: boolean; posterFormat?: 'dataUrl' | 'fileUrl' }
-    ) => Promise<{ success: boolean; exists?: boolean; path?: string; poster?: string; error?: string }>
+    ) => Promise<{
+      success: boolean
+      exists?: boolean
+      videoUrl?: string
+      coverUrl?: string
+      thumbUrl?: string
+      error?: string
+    }>
     decodeVideoBatch: (
       videoMd5List?: string[],
       options?: { includePoster?: boolean; posterFormat?: 'dataUrl' | 'fileUrl' }
     ) => Promise<{
       success: boolean
-      rows?: Array<{ index: number; md5: string; success: boolean; path?: string; poster?: string }>
+      rows?: Array<{
+        index: number
+        md5: string
+        info?: { exists: boolean; videoUrl?: string; coverUrl?: string; thumbUrl?: string }
+      }>
       error?: string
     }>
     parseVideoMd5: (content: string) => Promise<{ success: boolean; md5?: string; error?: string }>
@@ -254,7 +283,10 @@ export interface ElectronAPI {
       sessionId: string,
       msgId: string
     ) => Promise<{ success: boolean; hasCache?: boolean; data?: string; error?: string }>
-    getEmoji: (cdnUrl: string, md5?: string) => Promise<{ success: boolean; localPath?: string; error?: string }>
+    getEmoji: (
+      cdnUrl: string,
+      md5?: string
+    ) => Promise<{ success: boolean; localPath?: string; dataUrl?: string; error?: string }>
   }
 
   // === 系统通知 ===
@@ -348,6 +380,40 @@ export interface ElectronAPI {
     create: (payload: { outputPath: string; options?: unknown }) => Promise<unknown>
     inspect: (payload: { archivePath: string }) => Promise<unknown>
     restore: (payload: { archivePath: string }) => Promise<unknown>
+    onProgress: (callback: (progress: { phase?: string; percent?: number; message?: string }) => void) => () => void
+  }
+
+  // === 导出中心（Export） ===
+  export: {
+    contacts: (
+      outputDir: string,
+      options: unknown
+    ) => Promise<{ success: boolean; successCount?: number; error?: string }>
+    getLatestRecord: (
+      sessionId?: string,
+      format?: string
+    ) => Promise<{
+      success: boolean
+      record?: { sessionId?: string; format?: string; path?: string; createdAt?: number } | null
+      error?: string
+    }>
+  }
+
+  // === 朋友圈（SNS） ===
+  sns: {
+    getTimeline: (
+      limit?: number,
+      offset?: number,
+      usernames?: string[],
+      keyword?: string,
+      startTime?: number,
+      endTime?: number
+    ) => Promise<unknown>
+    getSnsUsernames: () => Promise<unknown>
+    getExportStats: () => Promise<unknown>
+    proxyImage: (url: string, key?: string | number) => Promise<unknown>
+    deleteSnsPost: (postId: string) => Promise<unknown>
+    checkBlockDeleteTrigger: () => Promise<unknown>
   }
 
   // 系统平台

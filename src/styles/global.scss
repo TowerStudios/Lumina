@@ -197,3 +197,43 @@ img {
     }
   }
 }
+
+/* === 群聊合成头像（TG 风格 2x2）— ChatList / ChatView 共用 === */
+.group-avatar {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+
+  &--text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    user-select: none;
+  }
+
+  &--img {
+    object-fit: cover;
+    background: var(--bg-secondary, #f0f0f0);
+  }
+
+  &--grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1px;
+    background: #fff;
+  }
+
+  &--cell {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}

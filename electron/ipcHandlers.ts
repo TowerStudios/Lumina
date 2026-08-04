@@ -1,6 +1,6 @@
 import { ipcMain, dialog, shell, app, BrowserWindow, Notification } from 'electron'
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs'
-import { join, dirname } from 'path'
+import { join, dirname, extname } from 'path'
 import { ConfigService } from './services/config'
 import { dbPathService } from './services/dbPathService'
 import { wcdbService } from './services/wcdbService'
@@ -19,6 +19,9 @@ import { insightProfileService } from './services/insightProfileService'
 import { analyticsService } from './services/analyticsService'
 import { groupSummaryService } from './services/groupSummaryService'
 import { backupService } from './services/backupService'
+import { contactExportService } from './services/contactExportService'
+import { exportRecordService } from './services/exportRecordService'
+import { snsService } from './services/snsService'
 import { getLogPath, logInfo, logError } from './utils/logger'
 
 // === 业务 IPC 注册器 ===
@@ -214,6 +217,67 @@ export function registerBusinessIpcHandlers(): void {
     return chatService.getMyAvatarUrl()
   })
 
+  // 批量获取群聊成员数量（群聊会话展示 "N 名成员"）
+  ipcMain.handle('chat:getGroupMemberCounts', async (_event, chatroomIds: string[]) => {
+    try {
+      const ids = Array.isArray(chatroomIds)
+        ? chatroomIds.filter((id) => typeof id === 'string' && id)
+        : []
+      if (ids.length === 0) return { success: true, map: {} }
+      return await wcdbService.getGroupMemberCounts(ids)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取群聊合成头像（最多 4 个群成员的头像 URL，供渲染层 2x2 拼接）
+  ipcMain.handle('chat:getGroupAvatar', async (_event, chatroomId: string) => {
+    try {
+      const normalizedId = String(chatroomId || '').trim()
+      const membersResult = await wcdbService.getGroupMembers(normalizedId)
+      if (!membersResult.success || !Array.isArray(membersResult.members)) {
+        console.warn(`[IPC] getGroupAvatar ${normalizedId}: 获取群成员失败 ${membersResult.error || ''}`)
+        return { success: false, error: membersResult.error || '获取群成员失败' }
+      }
+      console.log(`[IPC] getGroupAvatar ${normalizedId}: 群成员总数=${membersResult.members.length}`)
+      const usernames = membersResult.members
+        .map((m: any) =>
+          String(
+            m?.username ||
+            m?.userName ||
+            m?.user_name ||
+            m?.encryptUsername ||
+            m?.encryptUserName ||
+            m?.encrypt_username ||
+            m?.originalName ||
+            ''
+          ).trim()
+        )
+        .filter(Boolean)
+        .slice(0, 4)
+      console.log(`[IPC] getGroupAvatar ${normalizedId}: 提取成员 username=${JSON.stringify(usernames)}`)
+      const avatars: string[] = []
+      for (const uname of usernames) {
+        try {
+          const info = await chatService.getContactAvatar(uname, normalizedId)
+          if (info?.avatarUrl) {
+            const url = info.avatarUrl
+            avatars.push(url.startsWith('http://') ? 'https://' + url.substring(7) : url)
+          } else {
+            console.warn(`[IPC] getGroupAvatar ${normalizedId}: 成员 ${uname} 无头像`)
+          }
+        } catch (e) {
+          console.warn(`[IPC] getGroupAvatar ${normalizedId}: 成员 ${uname} 头像获取异常`, e)
+        }
+      }
+      console.log(`[IPC] getGroupAvatar ${normalizedId}: 有效头像数=${avatars.length} urls=${JSON.stringify(avatars)}`)
+      return { success: true, avatars }
+    } catch (e: any) {
+      console.warn(`[IPC] getGroupAvatar ${chatroomId} 异常`, e)
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
   ipcMain.handle('chat:markAllSessionsRead', async () => {
     return chatService.markAllSessionsRead()
   })
@@ -233,7 +297,93 @@ export function registerBusinessIpcHandlers(): void {
   // 解密并返回单条图片消息的 base64 数据（用于图片预览）
   ipcMain.handle('chat:getImageData', async (_event, sessionId: string, msgId: string) => {
     try {
-      return await chatService.getImageData(sessionId, msgId)
+      const result = await chatService.getImageData(sessionId, msgId)
+      if (!result.success) {
+        console.warn(`[IPC] chat:getImageData 失败 session=${sessionId} msg=${msgId} error=${result.error}`)
+      } else {
+        console.log(`[IPC] chat:getImageData 成功 session=${sessionId} msg=${msgId} dataLen=${result.data?.length || 0}`)
+      }
+      return result
+    } catch (e: any) {
+      console.warn(`[IPC] chat:getImageData 异常 session=${sessionId} msg=${msgId}`, e)
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // 获取文件消息信息（文件名/大小/本地路径探测）
+  ipcMain.handle('chat:getFileInfo', async (_event, sessionId: string, msgId: string) => {
+    try {
+      return await chatService.getFileInfo(sessionId, msgId)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // === 导出中心 ===
+  // 联系人导出（JSON / CSV / VCF）
+  ipcMain.handle('export:contacts', async (_event, outputDir: string, options: unknown) => {
+    try {
+      return await contactExportService.exportContacts(outputDir, options as any)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+  // 最近一次导出记录（用于导出中心展示）
+  ipcMain.handle('export:getLatestRecord', async (_event, sessionId?: string, format?: string) => {
+    try {
+      return { success: true, record: exportRecordService.getLatestRecord(sessionId || '', format || '') }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // === 朋友圈（SNS） ===
+  ipcMain.handle('sns:getTimeline', async (
+    _event,
+    limit?: number,
+    offset?: number,
+    usernames?: string[],
+    keyword?: string,
+    startTime?: number,
+    endTime?: number
+  ) => {
+    try {
+      return await snsService.getTimeline(limit, offset, usernames, keyword, startTime, endTime)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+  ipcMain.handle('sns:getSnsUsernames', async () => {
+    try {
+      return await snsService.getSnsUsernames()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+  ipcMain.handle('sns:getExportStats', async () => {
+    try {
+      return await snsService.getExportStatsFast()
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+  ipcMain.handle('sns:proxyImage', async (_event, url: string, key?: string | number) => {
+    try {
+      return await snsService.proxyImage(url, key)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+  ipcMain.handle('sns:deleteSnsPost', async (_event, postId: string) => {
+    try {
+      return await snsService.deleteSnsPost(postId)
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+  ipcMain.handle('sns:checkBlockDeleteTrigger', async () => {
+    try {
+      return await snsService.checkSnsBlockDeleteTrigger()
     } catch (e: any) {
       return { success: false, error: e?.message ?? String(e) }
     }
@@ -382,10 +532,28 @@ export function registerBusinessIpcHandlers(): void {
     }
   })
 
-  // 下载表情包（cdnUrl + md5 → 本地路径）
+  // 下载表情包（cdnUrl + md5 → 本地路径 + dataUrl）
+  // 渲染进程受 CSP 限制无法加载 file://，故同步返回 dataUrl 供 <img src> 直接使用
   ipcMain.handle('emoji:get', async (_event, cdnUrl: string, md5?: string) => {
     try {
-      return await chatService.downloadEmoji(cdnUrl, md5)
+      const result = await chatService.downloadEmoji(cdnUrl, md5)
+      if (!result.success || !result.localPath) return result
+      // 读取本地文件转为 data URL
+      if (!existsSync(result.localPath)) {
+        return { success: false, error: '表情文件不存在', localPath: result.localPath }
+      }
+      const ext = extname(result.localPath).toLowerCase()
+      const mimeTypes: Record<string, string> = {
+        '.gif': 'image/gif',
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.webp': 'image/webp'
+      }
+      const mimeType = mimeTypes[ext] || 'image/gif'
+      const data = readFileSync(result.localPath)
+      const dataUrl = `data:${mimeType};base64,${data.toString('base64')}`
+      return { success: true, localPath: result.localPath, dataUrl }
     } catch (e: any) {
       return { success: false, error: e?.message ?? String(e) }
     }

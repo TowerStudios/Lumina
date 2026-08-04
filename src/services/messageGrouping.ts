@@ -85,8 +85,9 @@ export function groupMessages(
 
     // 头像显示规则：对方消息且组末条或独立
     const showAvatar = !msg.isMe && (position === 'last' || position === 'single')
-    // 发送者名规则：对方消息且组首条或独立
-    const showSender = !msg.isMe && (position === 'first' || position === 'single')
+    // 发送者名规则：仅群聊（TG 中单聊不显示发送者名），对方消息且组首条或独立
+    const isGroupChat = String(msg.sessionId || '').endsWith('@chatroom')
+    const showSender = !msg.isMe && isGroupChat && (position === 'first' || position === 'single')
 
     result.push({
       message: msg,

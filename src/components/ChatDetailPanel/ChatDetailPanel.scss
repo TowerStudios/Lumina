@@ -200,3 +200,48 @@
     color: var(--text-primary);
   }
 }
+
+/* === 消息类型分布 === */
+.chat-detail__type-dist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.chat-detail__type-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-xs);
+}
+
+.chat-detail__type-label {
+  flex-shrink: 0;
+  width: 40px;
+  color: var(--text-secondary);
+}
+
+.chat-detail__type-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-ripple);
+  overflow: hidden;
+}
+
+.chat-detail__type-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #65aadd, #7bc862);
+  transition: width 0.4s ease;
+}
+
+.chat-detail__type-count {
+  flex-shrink: 0;
+  width: 42px;
+  text-align: right;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}

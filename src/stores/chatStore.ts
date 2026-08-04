@@ -46,6 +46,10 @@ interface ChatState {
   hasMoreBySession: Record<string, boolean>
   // 每个会话是否正在加载更多（上拉）
   loadingMoreBySession: Record<string, boolean>
+  // 每个会话下一次加载的 offset（后端返回的 nextOffset，避免游标重建）
+  nextOffsetBySession: Record<string, number>
+  // 群聊合成头像（最多 4 个成员头像 URL，chatroomId → string[]）
+  groupAvatarMap: Record<string, string[]>
 
   // === 本地状态（右键菜单操作，持久化到 config.sessionStates）===
   pinnedMap: Record<string, boolean>
@@ -70,7 +74,9 @@ interface ChatState {
   loadSessions: () => Promise<void>
   loadSessionStates: () => Promise<void>
   loadMessages: (sessionId: string, limit?: number) => Promise<void>
-  loadMoreMessages: (sessionId: string, offset: number, limit?: number) => Promise<{ hasMore: boolean; loaded: number }>
+  loadMoreMessages: (sessionId: string, limit?: number) => Promise<{ hasMore: boolean; loaded: number }>
+  loadGroupMeta: (groupIds: string[]) => Promise<void>
+  loadGroupAvatar: (sessionId: string) => Promise<void>
   markSessionRead: (sessionId: string) => void
   markSessionUnread: (sessionId: string) => void
   togglePin: (sessionId: string) => void
@@ -123,6 +129,8 @@ export const useChatStore = create<ChatState>((set, get) => {
   messagesError: {},
   hasMoreBySession: {},
   loadingMoreBySession: {},
+  nextOffsetBySession: {},
+  groupAvatarMap: {},
 
   pinnedMap: {},
   mutedMap: {},
@@ -168,9 +176,13 @@ export const useChatStore = create<ChatState>((set, get) => {
       // 异步批量加载会话头像（不阻塞页面渲染）
       // 后端 getSessions 不等待联系人信息，首次返回的 avatarUrl 多为空。
       // 这里分批调用 getContactAvatar 补充头像，每批 8 个避免 IPC 拥塞。
+      // 注意：跳过群聊会话——群聊在 contact 表没有可靠的个人头像，强行填充会显示错误头像
+      //（群聊头像由 ChatView 的 GroupCompositeAvatar 从群成员头像合成）。
       if (api.chat.getContactAvatar && sessions.length > 0) {
         const batchSize = 8
-        const needAvatar = sessions.filter((s) => !s.avatarUrl).map((s) => s.id)
+        const needAvatar = sessions
+          .filter((s) => !s.avatarUrl && !s.isGroup)
+          .map((s) => s.id)
         for (let i = 0; i < needAvatar.length; i += batchSize) {
           const batch = needAvatar.slice(i, i + batchSize)
           const results = await Promise.allSettled(
@@ -196,6 +208,15 @@ export const useChatStore = create<ChatState>((set, get) => {
             }))
           }
         }
+      }
+
+      // 异步加载群聊成员数量（群聊会话显示 "(N)" / "N 名成员"）
+      const groupIds = sessions.filter((s) => s.isGroup).map((s) => s.id)
+      if (groupIds.length > 0) {
+        get().loadGroupMeta(groupIds)
+        // 批量预载群聊合成头像（2x2 成员头像，TG 风格），会话列表与聊天头部共用
+        // 逐群调用（后端内部已按群串行取成员头像），fire-and-forget 不阻塞渲染
+        groupIds.forEach((id) => void get().loadGroupAvatar(id))
       }
 
       // 加载持久化的会话本地状态（置顶/静音/归档/标记未读）
@@ -241,15 +262,21 @@ export const useChatStore = create<ChatState>((set, get) => {
         throw new Error('electronAPI.chat.getMessages 不可用')
       }
       const myWxid = get().myWxid ?? undefined
-      // 后端契约：getMessages() -> { success, messages, hasMore, nextOffset, error }
-      const result = (await api.chat.getMessages(sessionId, 0, limit, undefined, undefined, true)) as MessagesResult
+      // 后端契约：getMessages(sessionId, offset, limit, startTime, endTime, ascending)
+      // 设计意图（见 chatService.getMessages）：offset=0 + ascending=false = 最新一批消息（TG 风格）
+      // 返回的数组为倒序（最新在前），渲染层按时间升序排序展示。
+      const result = (await api.chat.getMessages(sessionId, 0, limit, undefined, undefined, false)) as MessagesResult
       const raw = unwrapMessages(result)
-      // 按时间升序拉取（最早在上，最新在下 - TG 风格）
       const messages = raw.map((m) => adaptMessage(m, sessionId, myWxid))
       set((s) => ({
         messagesBySession: { ...s.messagesBySession, [sessionId]: messages },
         messagesLoading: { ...s.messagesLoading, [sessionId]: false },
         hasMoreBySession: { ...s.hasMoreBySession, [sessionId]: result.hasMore ?? false },
+        // 记录后端返回的 nextOffset，后续加载更多沿用（避免用 messages.length 导致游标重建）
+        nextOffsetBySession: {
+          ...s.nextOffsetBySession,
+          [sessionId]: Number(result.nextOffset) || messages.length,
+        },
       }))
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e)
@@ -261,26 +288,36 @@ export const useChatStore = create<ChatState>((set, get) => {
     }
   },
 
-  loadMoreMessages: async (sessionId, offset, limit = 50) => {
+  loadMoreMessages: async (sessionId, limit = 50) => {
     const api = window.electronAPI
     if (!api?.chat?.getMessages) return { hasMore: false, loaded: 0 }
+    if (get().loadingMoreBySession[sessionId]) return { hasMore: false, loaded: 0 }
     set((s) => ({
       loadingMoreBySession: { ...s.loadingMoreBySession, [sessionId]: true },
     }))
     try {
       const myWxid = get().myWxid ?? undefined
-      const result = (await api.chat.getMessages(sessionId, offset, limit, undefined, undefined, true)) as MessagesResult
+      // 沿用后端返回的 nextOffset 继续向上翻页（ascending=false → 更早的一批）
+      const offset = get().nextOffsetBySession[sessionId] ?? 0
+      const result = (await api.chat.getMessages(sessionId, offset, limit, undefined, undefined, false)) as MessagesResult
       const raw = unwrapMessages(result)
       const older = raw.map((m) => adaptMessage(m, sessionId, myWxid))
       const hasMore = result.hasMore ?? false
       set((s) => {
         const existing = s.messagesBySession[sessionId] || []
+        // 按 id 去重后前插（offset 与游标位置不一致时后端可能返回重叠数据）
+        const existingIds = new Set(existing.map((m) => m.id))
+        const deduped = older.filter((m) => !existingIds.has(m.id))
         return {
           messagesBySession: {
             ...s.messagesBySession,
-            [sessionId]: [...older, ...existing],
+            [sessionId]: [...deduped, ...existing],
           },
           hasMoreBySession: { ...s.hasMoreBySession, [sessionId]: hasMore },
+          nextOffsetBySession: {
+            ...s.nextOffsetBySession,
+            [sessionId]: Number(result.nextOffset) || offset + older.length,
+          },
           loadingMoreBySession: { ...s.loadingMoreBySession, [sessionId]: false },
         }
       })
@@ -291,6 +328,48 @@ export const useChatStore = create<ChatState>((set, get) => {
         loadingMoreBySession: { ...s.loadingMoreBySession, [sessionId]: false },
       }))
       return { hasMore: false, loaded: 0 }
+    }
+  },
+
+  // 批量加载群聊成员数量（群聊会话展示 "N 名成员"）
+  loadGroupMeta: async (groupIds: string[]) => {
+    const api = window.electronAPI
+    if (!api?.chat?.getGroupMemberCounts) return
+    try {
+      const result = await api.chat.getGroupMemberCounts(groupIds)
+      if (result?.success && result.map) {
+        const countMap = result.map
+        set((s) => ({
+          sessions: s.sessions.map((sess) => {
+            const count = countMap[sess.id]
+            if (sess.isGroup && typeof count === 'number' && count > 0) {
+              return { ...sess, memberCount: count }
+            }
+            return sess
+          }),
+        }))
+      }
+    } catch (e) {
+      console.error('[chatStore] loadGroupMeta 失败:', e)
+    }
+  },
+
+  // 加载群聊合成头像（最多 4 个群成员头像 URL），缓存到 groupAvatarMap
+  loadGroupAvatar: async (sessionId: string) => {
+    if (!sessionId || !sessionId.endsWith('@chatroom')) return
+    if (get().groupAvatarMap[sessionId] && get().groupAvatarMap[sessionId].length > 0) return
+    const api = window.electronAPI
+    if (!api?.chat?.getGroupAvatar) return
+    try {
+      const result = await api.chat.getGroupAvatar(sessionId)
+      if (result?.success && Array.isArray(result.avatars)) {
+        const avatars = result.avatars.filter((u): u is string => !!u)
+        if (avatars.length > 0) {
+          set((s) => ({ groupAvatarMap: { ...s.groupAvatarMap, [sessionId]: avatars } }))
+        }
+      }
+    } catch (e) {
+      console.error('[chatStore] loadGroupAvatar 失败:', e)
     }
   },
 

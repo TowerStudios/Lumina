@@ -13,8 +13,16 @@ export type NavSection =
   | 'sns'
   | 'ai'
   | 'analytics'
+  | 'analyticsHub'
+  | 'groupAnalytics'
+  | 'insightInbox'
+  | 'resources'
+  | 'annualReport'
+  | 'footprint'
   | 'export'
+  | 'backup'
   | 'settings'
+  | 'accountManagement'
 
 // === 主题 ===
 export type ThemeMode = 'light' | 'dark' | 'system'
@@ -43,6 +51,10 @@ interface UIState {
   // 会话选择（聊天页用）
   activeChatId: string | null
   setActiveChatId: (id: string | null) => void
+
+  // 搜索结果定位：跳转到会话后滚动到具体消息并高亮
+  pendingTargetMessage: { sessionId: string; messageKey: string } | null
+  setPendingTargetMessage: (target: { sessionId: string; messageKey: string } | null) => void
 
   // 详情/AI 面板（宽屏三栏时右侧）
   detailPanelOpen: boolean
@@ -76,6 +88,9 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   activeChatId: null,
   setActiveChatId: (id) => set({ activeChatId: id }),
+
+  pendingTargetMessage: null,
+  setPendingTargetMessage: (target) => set({ pendingTargetMessage: target }),
 
   detailPanelOpen: false,
   setDetailPanelOpen: (open) => set({ detailPanelOpen: open }),

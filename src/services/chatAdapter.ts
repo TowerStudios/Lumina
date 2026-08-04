@@ -70,6 +70,8 @@ export interface BackendMessage {
   voiceDurationSeconds?: number
   videoMd5?: string
   imageMd5?: string
+  imageDatName?: string
+  createTime?: number
   // Type 49 细分
   linkTitle?: string
   linkUrl?: string
@@ -85,6 +87,18 @@ export interface BackendMessage {
   // 名片
   cardNickname?: string
   cardUsername?: string
+  // 发送者
+  senderUsername?: string
+  // 转发聊天记录（appmsg type=19）
+  chatRecordTitle?: string
+  chatRecordList?: Array<{
+    datatype: number
+    sourcename: string
+    sourcetime?: string
+    datadesc?: string
+    datatitle?: string
+    fileext?: string
+  }>
 }
 
 // ---------------- 渲染层类型 ----------------
@@ -137,6 +151,54 @@ export interface RenderMessage {
   quotedSender?: string
   // 原始 localId（用于图片解密等需要定位原始消息的 IPC 调用）
   localId?: number
+  // === 媒体元数据（供 ChatView 媒体组件调用 IPC 使用）===
+  /** 视频 MD5（用于 video:decode IPC 查找视频文件）*/
+  videoMd5?: string
+  /** 图片 MD5（用于 image:decrypt 主路径）*/
+  imageMd5?: string
+  /** 图片 dat 文件名（用于 image:decrypt 主路径）*/
+  imageDatName?: string
+  /** 消息创建时间（用于 image:decrypt 定位文件）*/
+  createTime?: number
+  /** 发送者 username（群聊中用于获取成员独立头像）*/
+  senderUsername?: string
+  /** 表情包 CDN URL（用于 emoji:get IPC 下载）*/
+  emojiCdnUrl?: string
+  /** 表情包本地缓存路径（已下载则直接使用）*/
+  emojiLocalPath?: string
+  /** 文件名（file 类型）*/
+  fileName?: string
+  /** 文件大小（字节）*/
+  fileSize?: number
+  /** 文件扩展名（含点，如 .pdf）*/
+  fileExt?: string
+  /** 链接标题（link 类型）*/
+  linkTitle?: string
+  /** 链接 URL（link 类型）*/
+  linkUrl?: string
+  /** 链接/应用消息描述 */
+  appMsgDesc?: string
+  /** 位置名称（location 类型）*/
+  locationPoiname?: string
+  /** 位置地址标签（location 类型）*/
+  locationLabel?: string
+  /** 名片昵称（card 类型）*/
+  cardNickname?: string
+  /** 名片微信号（card 类型）*/
+  cardUsername?: string
+  /** 消息 serverId（用于 voice:transcribe 等需要服务端 ID 的 IPC）*/
+  serverId?: number
+  /** 转发聊天记录标题 */
+  chatRecordTitle?: string
+  /** 转发聊天记录条目（转发层级展示） */
+  chatRecordList?: Array<{
+    datatype: number
+    sourcename: string
+    sourcetime?: string
+    datadesc?: string
+    datatitle?: string
+    fileext?: string
+  }>
 }
 
 // === 渲染层联系人类型 ===
@@ -217,6 +279,14 @@ function hashString(str: string): number {
 
 function avatarColorFor(id: string): string {
   return AVATAR_PALETTE[hashString(id) % AVATAR_PALETTE.length]
+}
+
+/**
+ * 群聊发送者名颜色（TG 风格：同一成员固定一种颜色，基于 username 哈希）。
+ * 供 ChatView 消息气泡上方的发送者名使用。
+ */
+export function senderColorFor(id: string | undefined | null): string {
+  return avatarColorFor(String(id || ''))
 }
 
 /** 取首字符作为头像占位文字（中文取第一个字，英文取大写首字母） */
@@ -382,6 +452,27 @@ export function adaptMessage(
     quotedContent: backend.quotedContent,
     quotedSender: backend.quotedSender,
     localId: Number(backend.localId) || undefined,
+    // 媒体元数据透传（按类型只填充相关字段，避免无谓的字段污染）
+    videoMd5: type === 'video' ? backend.videoMd5 : undefined,
+    imageMd5: type === 'image' ? backend.imageMd5 : undefined,
+    imageDatName: type === 'image' ? backend.imageDatName : undefined,
+    createTime: backend.createTime,
+    emojiCdnUrl: type === 'emoji' ? backend.emojiCdnUrl : undefined,
+    emojiLocalPath: type === 'emoji' ? backend.emojiLocalPath : undefined,
+    fileName: type === 'file' ? backend.fileName : undefined,
+    fileSize: type === 'file' ? backend.fileSize : undefined,
+    fileExt: type === 'file' ? backend.fileExt : undefined,
+    linkTitle: type === 'link' ? backend.linkTitle : undefined,
+    linkUrl: type === 'link' ? backend.linkUrl : undefined,
+    appMsgDesc: type === 'link' ? backend.appMsgDesc : undefined,
+    locationPoiname: type === 'location' ? backend.locationPoiname : undefined,
+    locationLabel: type === 'location' ? backend.locationLabel : undefined,
+    cardNickname: type === 'card' ? backend.cardNickname : undefined,
+    cardUsername: type === 'card' ? backend.cardUsername : undefined,
+    serverId: Number(backend.serverId) || undefined,
+    senderUsername: backend.senderUsername || undefined,
+    chatRecordTitle: backend.chatRecordTitle,
+    chatRecordList: backend.chatRecordList,
   }
 }
 
@@ -444,6 +535,8 @@ export function adaptContact(backend: BackendContact): RenderContact {
       ? 'https://' + backend.avatarUrl.substring(7)
       : backend.avatarUrl
     : undefined
+  // 头像高清化：微信默认 /132 尺寸 → /0 原图
+  const hdUrl = avatarUrl ? avatarUrl.replace(/\/132(\b|$)/, '/0') : undefined
 
   return {
     username,
@@ -454,7 +547,7 @@ export function adaptContact(backend: BackendContact): RenderContact {
     region: (backend.region || '').trim() || undefined,
     description: (backend.description || '').trim() || undefined,
     detailDescription: (backend.detailDescription || '').trim() || undefined,
-    avatarUrl,
+    avatarUrl: hdUrl,
     avatarText: avatarTextFor(displayName),
     avatarColor: avatarColorFor(username),
     type,
@@ -533,7 +626,7 @@ export function unwrapMessages(result: MessagesResult | null | undefined): Backe
 /** 解包头像 URL 结果，失败/空时返回 null */
 export function unwrapAvatarUrl(result: AvatarResult | null | undefined): string | null {
   if (!result || !result.success) return null
-  return result.avatarUrl || null
+  return result.avatarUrl?.replace(/\/132(\b|$)/, '/0') || null
 }
 
 /** 解包联系人列表结果，失败时抛错 */

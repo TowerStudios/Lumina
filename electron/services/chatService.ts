@@ -8838,6 +8838,72 @@ class ChatService {
   }
 
   /**
+   * 获取文件消息的可打开路径（旧版微信文件在本地留有原始文件，新版走 CDN 无本地副本）。
+   * 返回文件名/大小/扩展名 + 若存在本地文件则返回 localPath。
+   */
+  async getFileInfo(
+    sessionId: string,
+    msgId: string
+  ): Promise<{
+    success: boolean
+    fileName?: string
+    fileSize?: number
+    fileExt?: string
+    fileMd5?: string
+    localPath?: string
+    error?: string
+  }> {
+    try {
+      const localId = parseInt(msgId, 10)
+      if (!this.connected) await this.connect()
+      const msgResult = await this.getMessageByLocalId(sessionId, localId)
+      if (!msgResult.success || !msgResult.message) {
+        return { success: false, error: '未找到消息' }
+      }
+      const msg = msgResult.message
+      const raw = msg.rawContent || msg.content || ''
+
+      const fileName = msg.fileName || this.extractXmlValue(raw, 'filename') || this.extractXmlValue(raw, 'title') || '[文件]'
+      let fileSize: number | undefined = msg.fileSize
+      if (fileSize === undefined) {
+        const sizeStr = this.extractXmlValue(raw, 'totallen') || this.extractXmlValue(raw, 'filesize')
+        if (sizeStr) {
+          const n = parseInt(sizeStr, 10)
+          if (!isNaN(n)) fileSize = n
+        }
+      }
+      let fileExt = msg.fileExt
+      if (!fileExt && fileName.includes('.')) {
+        fileExt = fileName.split('.').pop() || undefined
+      }
+      const fileMd5 = msg.fileMd5 || this.extractXmlValue(raw, 'md5') || this.extractXmlValue(raw, 'filemd5')
+
+      // 探测本地原始文件路径（旧版微信 <datatempfilepath> / <path>）
+      let localPath: string | undefined
+      const pathMatch = /<datatempfilepath>([^<]+)<\/datatempfilepath>/.exec(raw)
+        || /<path>([^<]+)<\/path>/.exec(raw)
+      if (pathMatch && pathMatch[1]) {
+        const candidate = pathMatch[1].trim()
+        if (candidate && existsSync(candidate)) {
+          localPath = candidate
+        }
+      }
+
+      return {
+        success: true,
+        fileName,
+        fileSize,
+        fileExt,
+        fileMd5: fileMd5?.toLowerCase(),
+        localPath,
+      }
+    } catch (e) {
+      console.error('ChatService: getFileInfo 失败:', e)
+      return { success: false, error: String(e) }
+    }
+  }
+
+  /**
    * getVoiceData（主用批量专属接口读取语音数据）
    */
   async getVoiceData(sessionId: string, msgId: string, createTime?: number, serverId?: string | number, senderWxidOpt?: string): Promise<{ success: boolean; data?: string; error?: string }> {

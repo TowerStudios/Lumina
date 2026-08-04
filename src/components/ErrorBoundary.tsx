@@ -26,6 +26,10 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('[ErrorBoundary] 捕获错误:', error, info.componentStack)
+    // 同步写入主进程日志，确保不丢失
+    try {
+      window.electronAPI?.log?.debug?.(`[ErrorBoundary] ${error.message} ${info.componentStack?.slice(0, 300)}`)
+    } catch {}
   }
 
   handleReset = () => {

@@ -4,14 +4,15 @@ import { Sidebar } from '@/components/Sidebar/Sidebar'
 import { ChatModule } from '@/components/ChatModule/ChatModule'
 import { SettingsPage } from '@/components/SettingsPage/SettingsPage'
 import { ContactsPage } from '@/components/ContactsPage/ContactsPage'
+import { SnsPage } from '@/components/SnsPage/SnsPage'
+import { AiChatPage } from '@/components/AiChatPage/AiChatPage'
+import { AnalyticsPage } from '@/components/AnalyticsPage/AnalyticsPage'
+import { ExportPage } from '@/components/ExportPage/ExportPage'
+import { ChatAnalyticsHubPage } from '@/components/ChatAnalyticsHubPage/ChatAnalyticsHubPage'
+import { BackupPage } from '@/components/BackupPage/BackupPage'
+import { InsightInboxPage } from '@/components/InsightInboxPage/InsightInboxPage'
 import { PlaceholderPage } from '@/components/PlaceholderPage'
 import { OnboardingPage } from '@/components/OnboardingPage/OnboardingPage'
-import {
-  Image as ImageIcon,
-  Sparkles,
-  BarChart3,
-  Download,
-} from 'lucide-react'
 import { useUIStore } from '@/stores/uiStore'
 import { useWindowSizeSync } from '@/hooks/useWindowSize'
 import './AppLayout.scss'
@@ -30,6 +31,7 @@ export function AppLayout() {
 
   const activeSection = useUIStore((s) => s.activeSection)
   const [isMaximized, setIsMaximized] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   // === Onboarding 检测 ===
   // onboardingChecking: 正在读取配置；onboardingDone: 是否已完成引导
@@ -86,13 +88,29 @@ export function AppLayout() {
       case 'contacts':
         return <ContactsPage />
       case 'sns':
-        return <PlaceholderPage title="朋友圈" description="朋友圈时间线、防删、导出。" icon={<ImageIcon size={48} strokeWidth={1} />} />
+        return <SnsPage />
       case 'ai':
-        return <PlaceholderPage title="AI 助手" description="多轮对话、画像、见解、群摘要。" icon={<Sparkles size={48} strokeWidth={1} />} />
+        return <AiChatPage />
       case 'analytics':
-        return <PlaceholderPage title="数据分析" description="个人/群聊统计、年度报告、词云、热力图。" icon={<BarChart3 size={48} strokeWidth={1} />} />
+        return <AnalyticsPage />
+      case 'analyticsHub':
+        return <ChatAnalyticsHubPage />
+      case 'groupAnalytics':
+        return <PlaceholderPage title="群聊分析" description="群成员活跃度与发言排行" />
+      case 'insightInbox':
+        return <InsightInboxPage />
+      case 'resources':
+        return <PlaceholderPage title="资源浏览" description="媒体资源浏览器" />
+      case 'annualReport':
+        return <PlaceholderPage title="年度报告" description="年度聊天数据报告" />
+      case 'footprint':
+        return <PlaceholderPage title="我的足迹" description="时间线足迹与 AI 画像" />
       case 'export':
-        return <PlaceholderPage title="导出" description="10 种格式导出、自动化任务、暂停恢复。" icon={<Download size={48} strokeWidth={1} />} />
+        return <ExportPage />
+      case 'backup':
+        return <BackupPage />
+      case 'accountManagement':
+        return <PlaceholderPage title="账号管理" description="多账号扫描、切换与删除" />
       case 'settings':
         return <SettingsPage />
       default:
@@ -102,9 +120,9 @@ export function AppLayout() {
 
   return (
     <div className={`app-layout ${isMaximized ? 'app-layout--maximized' : ''}`}>
-      <TitleBar />
+      <TitleBar sidebarCollapsed={sidebarCollapsed} onToggleSidebar={() => setSidebarCollapsed(v => !v)} />
       <div className="app-layout__body">
-        <Sidebar />
+        <Sidebar collapsed={sidebarCollapsed} />
         <main className="app-layout__main" role="main">
           {renderContent()}
         </main>

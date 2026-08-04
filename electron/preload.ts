@@ -121,6 +121,20 @@ const electronAPI = {
     getContactAvatar: (username: string, chatroomId?: string) =>
       ipcRenderer.invoke('chat:getContactAvatar', username, chatroomId),
     getMyAvatarUrl: () => ipcRenderer.invoke('chat:getMyAvatarUrl'),
+    // 批量获取群聊成员数量
+    getGroupMemberCounts: (chatroomIds: string[]) =>
+      ipcRenderer.invoke('chat:getGroupMemberCounts', chatroomIds) as Promise<{
+        success: boolean
+        map?: Record<string, number>
+        error?: string
+      }>,
+    // 获取群聊合成头像（最多 4 个成员头像 URL）
+    getGroupAvatar: (chatroomId: string) =>
+      ipcRenderer.invoke('chat:getGroupAvatar', chatroomId) as Promise<{
+        success: boolean
+        avatars?: string[]
+        error?: string
+      }>,
     markAllSessionsRead: () => ipcRenderer.invoke('chat:markAllSessionsRead'),
     searchMessages: (
       keyword: string,
@@ -140,7 +154,9 @@ const electronAPI = {
         endTimestamp
       ),
     getImageData: (sessionId: string, msgId: string) =>
-      ipcRenderer.invoke('chat:getImageData', sessionId, msgId)
+      ipcRenderer.invoke('chat:getImageData', sessionId, msgId),
+    getFileInfo: (sessionId: string, msgId: string) =>
+      ipcRenderer.invoke('chat:getFileInfo', sessionId, msgId)
   },
 
   // 系统对话框
@@ -187,13 +203,14 @@ const electronAPI = {
         dataUrl?: string
         error?: string
       }>,
-    // 视频解码（获取视频信息）
+    // 视频解码（获取视频信息：文件路径 + 封面 dataUrl）
     decodeVideo: (videoMd5: string, options?: { includePoster?: boolean; posterFormat?: 'dataUrl' | 'fileUrl' }) =>
       ipcRenderer.invoke('video:decode', videoMd5, options) as Promise<{
         success: boolean
         exists?: boolean
-        path?: string
-        poster?: string
+        videoUrl?: string
+        coverUrl?: string
+        thumbUrl?: string
         error?: string
       }>,
     // 批量视频信息
@@ -235,11 +252,12 @@ const electronAPI = {
         data?: string
         error?: string
       }>,
-    // 下载表情包
+    // 下载表情包（返回 localPath + dataUrl，dataUrl 供 <img src> 直接使用）
     getEmoji: (cdnUrl: string, md5?: string) =>
       ipcRenderer.invoke('emoji:get', cdnUrl, md5) as Promise<{
         success: boolean
         localPath?: string
+        dataUrl?: string
         error?: string
       }>
   },
@@ -366,14 +384,48 @@ const electronAPI = {
       ipcRenderer.invoke('groupSummary:triggerDay', payload) as Promise<unknown>
   },
 
-  // === 备份与恢复（Backup） ===
+  // 备份与恢复（Backup）
   backup: {
     create: (payload: { outputPath: string; options?: unknown }) =>
       ipcRenderer.invoke('backup:create', payload) as Promise<unknown>,
     inspect: (payload: { archivePath: string }) =>
       ipcRenderer.invoke('backup:inspect', payload) as Promise<unknown>,
     restore: (payload: { archivePath: string }) =>
-      ipcRenderer.invoke('backup:restore', payload) as Promise<unknown>
+      ipcRenderer.invoke('backup:restore', payload) as Promise<unknown>,
+    onProgress: (callback: (progress: { phase?: string; percent?: number; message?: string }) => void) => {
+      const listener = (_e: unknown, p: unknown) => callback(p as { phase?: string; percent?: number; message?: string })
+      ipcRenderer.on('backup:progress', listener)
+      return () => ipcRenderer.off('backup:progress', listener)
+    }
+  },
+
+  // === 导出中心（Export） ===
+  export: {
+    contacts: (outputDir: string, options: unknown) =>
+      ipcRenderer.invoke('export:contacts', outputDir, options) as Promise<{
+        success: boolean
+        successCount?: number
+        error?: string
+      }>,
+    getLatestRecord: (sessionId?: string, format?: string) =>
+      ipcRenderer.invoke('export:getLatestRecord', sessionId, format) as Promise<{
+        success: boolean
+        record?: { sessionId?: string; format?: string; path?: string; createdAt?: number } | null
+        error?: string
+      }>
+  },
+
+  // === 朋友圈（SNS） ===
+  sns: {
+    getTimeline: (limit?: number, offset?: number, usernames?: string[], keyword?: string, startTime?: number, endTime?: number) =>
+      ipcRenderer.invoke('sns:getTimeline', limit, offset, usernames, keyword, startTime, endTime) as Promise<unknown>,
+    getSnsUsernames: () => ipcRenderer.invoke('sns:getSnsUsernames') as Promise<unknown>,
+    getExportStats: () => ipcRenderer.invoke('sns:getExportStats') as Promise<unknown>,
+    proxyImage: (url: string, key?: string | number) =>
+      ipcRenderer.invoke('sns:proxyImage', url, key) as Promise<unknown>,
+    deleteSnsPost: (postId: string) =>
+      ipcRenderer.invoke('sns:deleteSnsPost', postId) as Promise<unknown>,
+    checkBlockDeleteTrigger: () => ipcRenderer.invoke('sns:checkBlockDeleteTrigger') as Promise<unknown>
   },
 
   // 系统平台
