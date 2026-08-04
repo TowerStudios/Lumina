@@ -1075,9 +1075,16 @@ export function registerBusinessIpcHandlers(): void {
   ipcMain.handle('chat:getMyFootprintStats', async (_event, _begin: number, _end: number) => {
     try {
       const stats = await analyticsService.getOverallStatistics(true)
-      return { success: true, data: stats }
+      const data = (stats as any)?.data || {}
+      return {
+        totalMessages: data.totalMessages || 0,
+        totalContacts: data.totalContacts || 0,
+        activeDays: data.activeDays || 0,
+        sentMessages: data.sentMessages || 0,
+        receivedMessages: data.receivedMessages || 0,
+      }
     } catch (e: any) {
-      return { success: false, error: e?.message ?? String(e) }
+      return { error: e?.message ?? String(e) }
     }
   })
 
@@ -1142,13 +1149,14 @@ export function registerBusinessIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('groupAnalytics:getGroupMessageRanking', async (_event, groupId: string, topN?: number, startDate?: string, endDate?: string) => {
+  ipcMain.handle('groupAnalytics:getGroupMessageRanking', async (_event, groupId: string, _topN?: number, _startDate?: string, _endDate?: string) => {
     try {
       const members = await wcdbService.getGroupMembers(groupId)
-      const rankings = ((members as any)?.members || []).slice(0, topN || 20).map((m: any, i: number) => ({
+      // 返回成员列表但消息数为 0（需实现真实统计查询）
+      const rankings = ((members as any)?.members || []).slice(0, _topN || 20).map((m: any, i: number) => ({
         username: m?.username || m?.encryptUsername || '',
         displayName: m?.displayName || m?.nickname || `成员${i + 1}`,
-        messageCount: Math.floor(Math.random() * 500) + 10, // 占位：实际需查询消息表统计
+        messageCount: 0,
         avatarUrl: m?.avatarUrl,
       }))
       return { success: true, rankings }
@@ -1157,11 +1165,11 @@ export function registerBusinessIpcHandlers(): void {
     }
   })
 
-  ipcMain.handle('groupAnalytics:getGroupActiveHours', async (_event, groupId: string) => {
+  ipcMain.handle('groupAnalytics:getGroupActiveHours', async (_event, _groupId: string) => {
     try {
-      // 占位：24 小时分布
+      // 返回空的小时分布（需实现真实统计查询）
       const hours: Record<number, number> = {}
-      for (let h = 0; h < 24; h++) hours[h] = Math.floor(Math.random() * 100)
+      for (let h = 0; h < 24; h++) hours[h] = 0
       return { success: true, hours }
     } catch (e: any) {
       return { success: false, error: e?.message ?? String(e), hours: {} }
@@ -1180,8 +1188,8 @@ export function registerBusinessIpcHandlers(): void {
   ipcMain.handle('annualReport:getAvailableYears', async () => {
     try {
       const currentYear = new Date().getFullYear()
-      const years: number[] = []
-      for (let y = currentYear; y >= currentYear - 5; y--) years.push(y)
+      const years: { year: number; available: boolean }[] = []
+      for (let y = currentYear; y >= currentYear - 5; y--) years.push({ year: y, available: true })
       return { success: true, years }
     } catch (e: any) {
       return { success: false, error: e?.message ?? String(e), years: [] }
@@ -1205,10 +1213,19 @@ export function registerBusinessIpcHandlers(): void {
 
   ipcMain.handle('annualReport:generateReport', async (_event, year: number) => {
     try {
-      const begin = new Date(year, 0, 1).getTime() / 1000
-      const end = new Date(year, 11, 31, 23, 59, 59).getTime() / 1000
       const stats = await analyticsService.getOverallStatistics(true)
-      return { success: true, report: { year, stats } }
+      const data = (stats as any)?.data || {}
+      return {
+        success: true,
+        report: {
+          year,
+          totalMessages: data.totalMessages || 0,
+          totalContacts: data.totalContacts || 0,
+          totalSessions: data.totalSessions || 0,
+          activeDays: data.activeDays || 0,
+          peakMonth: data.peakMonth || null,
+        }
+      }
     } catch (e: any) {
       return { success: false, error: e?.message ?? String(e) }
     }
