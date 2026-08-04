@@ -27,7 +27,7 @@ export function ResourcesPage() {
   const [error, setError] = useState('')
   const [thumbnails, setThumbnails] = useState<Record<string, string>>({})
 
-  const mediaType = tab === 'images' ? 3 : 43
+  const mediaType = tab === 'images' ? 'image' : 'video'
 
   const loadPage = useCallback(async (reset: boolean) => {
     setLoading(true)
