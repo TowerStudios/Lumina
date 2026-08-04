@@ -570,3 +570,27 @@
     transform: rotate(360deg);
   }
 }
+
+/* 关闭按钮（弹窗模式）*/
+.settings-page__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.12s, color 0.12s;
+
+  &:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+  }
+}

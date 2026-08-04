@@ -48,6 +48,10 @@ interface UIState {
   activeSection: NavSection
   setActiveSection: (section: NavSection) => void
 
+  // 设置弹窗（WeFlow 风格：模态弹窗，非独立页面）
+  settingsOpen: boolean
+  setSettingsOpen: (open: boolean) => void
+
   // 会话选择（聊天页用）
   activeChatId: string | null
   setActiveChatId: (id: string | null) => void
@@ -83,6 +87,8 @@ export const useUIStore = create<UIState>((set, get) => ({
   setLayoutMode: (mode) => set({ layoutMode: mode }),
 
   activeSection: 'chats',
+  settingsOpen: false,
+  setSettingsOpen: (open) => set({ settingsOpen: open }),
   setActiveSection: (section) =>
     set({ activeSection: section, narrowStack: [section] }),
 

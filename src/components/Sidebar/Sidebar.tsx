@@ -51,6 +51,7 @@ interface UserProfile {
 export function Sidebar({ collapsed }: { collapsed?: boolean }) {
   const activeSection = useUIStore((s) => s.activeSection)
   const setActiveSection = useUIStore((s) => s.setActiveSection)
+  const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const [profile, setProfile] = useState<UserProfile>(() => {
     try { return JSON.parse(localStorage.getItem(USER_CACHE_KEY) || '{}') } catch { return {} }
@@ -156,7 +157,7 @@ export function Sidebar({ collapsed }: { collapsed?: boolean }) {
             </button>
             <button
               className="sidebar__user-menu-item"
-              onClick={() => { setActiveSection('settings'); setUserMenuOpen(false) }}
+              onClick={() => { setSettingsOpen(true); setUserMenuOpen(false) }}
             >
               <Settings size={15} /> 设置
             </button>

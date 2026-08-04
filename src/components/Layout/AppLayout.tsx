@@ -116,12 +116,13 @@ export function AppLayout() {
         return <BackupPage />
       case 'accountManagement':
         return <AccountManagementPage />
-      case 'settings':
-        return <SettingsPage />
       default:
         return <PlaceholderPage title="Lumina" />
     }
   }
+
+  const settingsOpen = useUIStore((s) => s.settingsOpen)
+  const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
 
   return (
     <div className={`app-layout ${isMaximized ? 'app-layout--maximized' : ''}`}>
@@ -132,6 +133,15 @@ export function AppLayout() {
           {renderContent()}
         </main>
       </div>
+
+      {/* 设置弹窗（WeFlow 风格：模态覆盖层） */}
+      {settingsOpen && (
+        <div className="settings-modal-overlay" onClick={() => setSettingsOpen(false)}>
+          <div className="settings-modal" onClick={(e) => e.stopPropagation()}>
+            <SettingsPage onClose={() => setSettingsOpen(false)} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -8,6 +8,7 @@ import {
   FlaskConical,
   Check,
   AlertCircle,
+  X,
   Lock,
   Unlock,
   Fingerprint,
@@ -22,7 +23,7 @@ import './SettingsPage.scss'
 
 type TestState = 'idle' | 'testing' | 'ok' | 'fail'
 
-export function SettingsPage() {
+export function SettingsPage({ onClose }: { onClose?: () => void }) {
   const [version, setVersion] = useState<string>('0.1.0')
   const [appName, setAppName] = useState<string>('Lumina')
 
@@ -304,6 +305,11 @@ export function SettingsPage() {
 
   return (
     <div className="settings-page">
+      {onClose && (
+        <button className="settings-page__close" onClick={onClose} title="关闭" aria-label="关闭">
+          <X size={18} />
+        </button>
+      )}
       <header className="settings-page__header">
         <h1 className="settings-page__title">设置</h1>
       </header>
