@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Sparkles, Search, MessageSquare, Loader2, ChevronRight, Filter, X } from 'lucide-react'
 import { useChatStore } from '@/stores/chatStore'
 import './InsightInboxPage.scss'
@@ -55,11 +55,14 @@ export function InsightInboxPage() {
     }).catch(() => {})
   }, [detailId])
 
-  const sessionNameMap = useChatStore((s) => {
+  // 注意：selector 必须返回稳定引用（sessions 数组本身），否则 zustand 每次
+  // 渲染都产生新 Map → 无限重渲染（Maximum update depth exceeded）
+  const sessions = useChatStore((s) => s.sessions)
+  const sessionNameMap = useMemo(() => {
     const m = new Map<string, string>()
-    for (const sess of s.sessions) m.set(sess.id, sess.name)
+    for (const sess of sessions) m.set(sess.id, sess.name)
     return m
-  })
+  }, [sessions])
 
   return (
     <div className="insight-inbox">

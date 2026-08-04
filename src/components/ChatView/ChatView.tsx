@@ -56,11 +56,6 @@ export function ChatView({ showBackButton, onBack }: ChatViewProps) {
     activeChatId ? s.loadingMoreBySession[activeChatId] ?? false : false
   )
   const loadMoreMessages = useChatStore((s) => s.loadMoreMessages)
-  const loadGroupAvatar = useChatStore((s) => s.loadGroupAvatar)
-  const groupAvatarList = useChatStore((s) =>
-    activeChatId ? s.groupAvatarMap[activeChatId] : undefined
-  )
-
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   // 跟踪已加载过的会话，防止空会话（0 条消息）触发无限重载
@@ -107,14 +102,6 @@ export function ChatView({ showBackButton, onBack }: ChatViewProps) {
     scrollToBottomOnLoadRef.current = true
     loadMessages(activeChatId, 50)
   }, [activeChatId, messagesLoading, messagesError, loadMessages])
-
-  // 群聊会话：加载合成头像（最多 4 个成员头像）。无论后端是否返回了群头像，
-  // 群聊都优先用成员头像合成（TG 风格），仅在成员头像为空时回退。
-  useEffect(() => {
-    if (activeChatId && activeChatId.endsWith('@chatroom')) {
-      void loadGroupAvatar(activeChatId)
-    }
-  }, [activeChatId, loadGroupAvatar])
 
   // 首屏加载完成后：即时滚动到底部（显示最新消息，TG 行为）
   useEffect(() => {
@@ -236,24 +223,8 @@ export function ChatView({ showBackButton, onBack }: ChatViewProps) {
           </button>
         )}
         <div className="chat-view__avatar-wrap">
-          {session.isGroup && groupAvatarList.length > 0 ? (
-            <GroupCompositeAvatar
-              sessionId={session.id}
-              avatars={groupAvatarList}
-              color={session.avatarColor}
-              text={session.avatarText}
-              alt={session.name}
-            />
-          ) : session.avatarUrl ? (
+          {session.avatarUrl ? (
             <img className="chat-view__avatar-img" src={session.avatarUrl} alt={session.name} />
-          ) : session.isGroup ? (
-            <GroupCompositeAvatar
-              sessionId={session.id}
-              avatars={groupAvatarList}
-              color={session.avatarColor}
-              text={session.avatarText}
-              alt={session.name}
-            />
           ) : (
             <div
               className="chat-view__avatar chat-view__avatar--text"
@@ -324,42 +295,6 @@ export function ChatView({ showBackButton, onBack }: ChatViewProps) {
           只读模式 · 此工具用于查看历史消息，不支持发送
         </div>
       </footer>
-    </div>
-  )
-}
-
-// === 群聊合成头像（TG 风格：最多 4 个成员头像 2x2 拼接）===
-function GroupCompositeAvatar({
-  sessionId,
-  avatars,
-  color,
-  text,
-  alt,
-}: {
-  sessionId: string
-  avatars?: string[]
-  color: string
-  text: string
-  alt: string
-}) {
-  const list = avatars?.filter(Boolean) ?? []
-  if (list.length === 0) {
-    return (
-      <div className="chat-view__avatar chat-view__avatar--text" style={{ background: color }}>
-        {text}
-      </div>
-    )
-  }
-  if (list.length === 1) {
-    return <img className="chat-view__avatar-img" src={list[0]} alt={alt} />
-  }
-  // 2x2 网格（2 张时占上下一半）
-  const cells = list.slice(0, 4)
-  return (
-    <div className="chat-view__avatar chat-view__avatar--group">
-      {cells.map((url, i) => (
-        <img key={i} className="chat-view__avatar-group-cell" src={url} alt="" loading="lazy" />
-      ))}
     </div>
   )
 }
