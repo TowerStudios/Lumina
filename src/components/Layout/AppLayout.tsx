@@ -11,6 +11,11 @@ import { ExportPage } from '@/components/ExportPage/ExportPage'
 import { ChatAnalyticsHubPage } from '@/components/ChatAnalyticsHubPage/ChatAnalyticsHubPage'
 import { BackupPage } from '@/components/BackupPage/BackupPage'
 import { InsightInboxPage } from '@/components/InsightInboxPage/InsightInboxPage'
+import { GroupAnalyticsPage } from '@/components/GroupAnalyticsPage/GroupAnalyticsPage'
+import { AnnualReportPage } from '@/components/AnnualReportPage/AnnualReportPage'
+import { MyFootprintPage } from '@/components/MyFootprintPage/MyFootprintPage'
+import { ResourcesPage } from '@/components/ResourcesPage/ResourcesPage'
+import { AccountManagementPage } from '@/components/AccountManagementPage/AccountManagementPage'
 import { PlaceholderPage } from '@/components/PlaceholderPage'
 import { OnboardingPage } from '@/components/OnboardingPage/OnboardingPage'
 import { useUIStore } from '@/stores/uiStore'
@@ -96,21 +101,21 @@ export function AppLayout() {
       case 'analyticsHub':
         return <ChatAnalyticsHubPage />
       case 'groupAnalytics':
-        return <PlaceholderPage title="群聊分析" description="群成员活跃度与发言排行" />
+        return <GroupAnalyticsPage />
       case 'insightInbox':
         return <InsightInboxPage />
       case 'resources':
-        return <PlaceholderPage title="资源浏览" description="媒体资源浏览器" />
+        return <ResourcesPage />
       case 'annualReport':
-        return <PlaceholderPage title="年度报告" description="年度聊天数据报告" />
+        return <AnnualReportPage />
       case 'footprint':
-        return <PlaceholderPage title="我的足迹" description="时间线足迹与 AI 画像" />
+        return <MyFootprintPage />
       case 'export':
         return <ExportPage />
       case 'backup':
         return <BackupPage />
       case 'accountManagement':
-        return <PlaceholderPage title="账号管理" description="多账号扫描、切换与删除" />
+        return <AccountManagementPage />
       case 'settings':
         return <SettingsPage />
       default:

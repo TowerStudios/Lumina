@@ -1,0 +1,158 @@
+.annual-report {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--bg-primary);
+  padding: 24px;
+
+  &__header {
+    margin-bottom: 24px;
+
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+      font-size: var(--font-size-xl);
+      font-weight: 600;
+      color: var(--text-bold);
+    }
+
+    p {
+      margin: 6px 0 0;
+      color: var(--text-tertiary);
+      font-size: var(--font-size-sm);
+    }
+  }
+
+  &__years {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+
+  &__year-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 18px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-align: left;
+
+    &:hover:not(:disabled) {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+
+    &--active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    svg { color: var(--primary); }
+  }
+
+  &__year-label {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    color: var(--text-bold);
+  }
+
+  &__year-meta {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+  }
+
+  &__year-disabled {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    background: var(--bg-hover);
+    color: var(--text-tertiary);
+  }
+
+  &__report {
+    padding-top: 20px;
+    border-top: 1px solid var(--divider-color);
+
+    h3 {
+      margin: 0 0 16px;
+      font-size: var(--font-size-lg);
+      font-weight: 600;
+      color: var(--text-bold);
+    }
+  }
+
+  &__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  &__stat-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    background: var(--bg-secondary);
+
+    svg { color: var(--primary); }
+  }
+
+  &__stat-value {
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
+    color: var(--text-bold);
+  }
+
+  &__stat-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+  }
+
+  &__peak {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--primary-light);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+
+    strong { color: var(--primary); margin-left: 4px; }
+  }
+
+  &__loading, &__empty, &__error {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-tertiary);
+    font-size: var(--font-size-sm);
+  }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  &__error { color: var(--danger); }
+
+  &__spin { animation: annual-spin 1s linear infinite; }
+}
+
+@keyframes annual-spin { to { transform: rotate(360deg); } }

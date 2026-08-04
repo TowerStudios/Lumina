@@ -212,6 +212,9 @@ export interface ElectronAPI {
       localPath?: string
       error?: string
     }>
+    getMyFootprintStats: (begin: number, end: number) => Promise<unknown>
+    exportMyFootprint: (begin: number, end: number, format: string, filePath: string) => Promise<unknown>
+    getMediaStream: (options?: any) => Promise<unknown>
   }
 
   // 系统对话框
@@ -414,6 +417,23 @@ export interface ElectronAPI {
     proxyImage: (url: string, key?: string | number) => Promise<unknown>
     deleteSnsPost: (postId: string) => Promise<unknown>
     checkBlockDeleteTrigger: () => Promise<unknown>
+  }
+
+  // 群聊分析
+  groupAnalytics: {
+    getGroupChats: () => Promise<unknown>
+    getGroupMembers: (groupId: string) => Promise<unknown>
+    getGroupMessageRanking: (groupId: string, topN?: number, startDate?: string, endDate?: string) => Promise<unknown>
+    getGroupActiveHours: (groupId: string, startDate?: string, endDate?: string) => Promise<unknown>
+    getGroupMediaStats: (groupId: string, startDate?: string, endDate?: string) => Promise<unknown>
+  }
+
+  // 年度报告
+  annualReport: {
+    getAvailableYears: () => Promise<unknown>
+    startAvailableYearsLoad: () => Promise<unknown>
+    cancelAvailableYearsLoad: (taskId: string) => Promise<unknown>
+    generateReport: (year: number) => Promise<unknown>
   }
 
   // 系统平台

@@ -156,7 +156,13 @@ const electronAPI = {
     getImageData: (sessionId: string, msgId: string) =>
       ipcRenderer.invoke('chat:getImageData', sessionId, msgId),
     getFileInfo: (sessionId: string, msgId: string) =>
-      ipcRenderer.invoke('chat:getFileInfo', sessionId, msgId)
+      ipcRenderer.invoke('chat:getFileInfo', sessionId, msgId),
+    getMyFootprintStats: (begin: number, end: number) =>
+      ipcRenderer.invoke('chat:getMyFootprintStats', begin, end),
+    exportMyFootprint: (begin: number, end: number, format: string, filePath: string) =>
+      ipcRenderer.invoke('chat:exportMyFootprint', begin, end, format, filePath),
+    getMediaStream: (options?: any) =>
+      ipcRenderer.invoke('chat:getMediaStream', options)
   },
 
   // 系统对话框
@@ -426,6 +432,26 @@ const electronAPI = {
     deleteSnsPost: (postId: string) =>
       ipcRenderer.invoke('sns:deleteSnsPost', postId) as Promise<unknown>,
     checkBlockDeleteTrigger: () => ipcRenderer.invoke('sns:checkBlockDeleteTrigger') as Promise<unknown>
+  },
+
+  // === 群聊分析 ===
+  groupAnalytics: {
+    getGroupChats: () => ipcRenderer.invoke('groupAnalytics:getGroupChats') as Promise<unknown>,
+    getGroupMembers: (groupId: string) => ipcRenderer.invoke('groupAnalytics:getGroupMembers', groupId) as Promise<unknown>,
+    getGroupMessageRanking: (groupId: string, topN?: number, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('groupAnalytics:getGroupMessageRanking', groupId, topN, startDate, endDate) as Promise<unknown>,
+    getGroupActiveHours: (groupId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('groupAnalytics:getGroupActiveHours', groupId, startDate, endDate) as Promise<unknown>,
+    getGroupMediaStats: (groupId: string, startDate?: string, endDate?: string) =>
+      ipcRenderer.invoke('groupAnalytics:getGroupMediaStats', groupId, startDate, endDate) as Promise<unknown>
+  },
+
+  // === 年度报告 ===
+  annualReport: {
+    getAvailableYears: () => ipcRenderer.invoke('annualReport:getAvailableYears') as Promise<unknown>,
+    startAvailableYearsLoad: () => ipcRenderer.invoke('annualReport:startAvailableYearsLoad') as Promise<unknown>,
+    cancelAvailableYearsLoad: (taskId: string) => ipcRenderer.invoke('annualReport:cancelAvailableYearsLoad', taskId) as Promise<unknown>,
+    generateReport: (year: number) => ipcRenderer.invoke('annualReport:generateReport', year) as Promise<unknown>
   },
 
   // 系统平台

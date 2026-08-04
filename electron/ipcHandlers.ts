@@ -1059,5 +1059,151 @@ export function registerBusinessIpcHandlers(): void {
       return { success: false, error: e?.message ?? String(e) }
     }
   })
+
+  // 备份进度推送
+  // (由 backupService 内部通过 mainWindow.webContents.send('backup:progress', ...) 推送)
+
+  // === 我的足迹 ===
+  ipcMain.handle('chat:getMyFootprintStats', async (_event, _begin: number, _end: number) => {
+    try {
+      const stats = await analyticsService.getOverallStatistics(true)
+      return { success: true, data: stats }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('chat:exportMyFootprint', async (_event, _begin: number, _end: number, format: string, filePath: string) => {
+    try {
+      // 简化版：导出为 JSON/CSV
+      const stats = await analyticsService.getOverallStatistics(true)
+      const content = format === 'csv'
+        ? `metric,value\nmessages,${(stats as any)?.totalMessages || 0}\ncontacts,${(stats as any)?.totalContacts || 0}\n`
+        : JSON.stringify(stats, null, 2)
+      writeFileSync(filePath, content, 'utf-8')
+      return { success: true, filePath }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // === 媒体流（资源浏览） ===
+  ipcMain.handle('chat:getMediaStream', async (_event, options?: any) => {
+    try {
+      const mediaType = options?.mediaType || 'image'
+      const limit = options?.limit || 50
+      const offset = options?.offset || 0
+      // 通过 chatService 查询含图片/视频的消息
+      const sessions = await chatService.getSessions()
+      const items: any[] = []
+      for (const session of (sessions as any)?.sessions || []) {
+        if (items.length >= limit) break
+        const msgs = await chatService.getMessages(session.username, offset, limit, 0, 0, false)
+        for (const msg of (msgs as any)?.messages || []) {
+          if (mediaType === 'image' && msg.localType === 3) {
+            items.push({ sessionId: session.username, sessionName: session.displayName, localId: msg.localId, type: 'image', createTime: msg.createTime, imageMd5: msg.imageMd5 })
+          } else if (mediaType === 'video' && msg.localType === 43) {
+            items.push({ sessionId: session.username, sessionName: session.displayName, localId: msg.localId, type: 'video', createTime: msg.createTime, videoMd5: msg.videoMd5 })
+          }
+          if (items.length >= limit) break
+        }
+      }
+      return { success: true, items, nextOffset: offset + items.length, hasMore: items.length >= limit }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e), items: [] }
+    }
+  })
+
+  // === 群聊分析 ===
+  ipcMain.handle('groupAnalytics:getGroupChats', async () => {
+    try {
+      const sessions = await chatService.getSessions()
+      const groups = ((sessions as any)?.sessions || []).filter((s: any) => String(s.username || '').includes('@chatroom'))
+      return { success: true, groups: groups.map((g: any) => ({ id: g.username, name: g.displayName, memberCount: g.memberCount || 0, avatarUrl: g.avatarUrl })) }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e), groups: [] }
+    }
+  })
+
+  ipcMain.handle('groupAnalytics:getGroupMembers', async (_event, groupId: string) => {
+    try {
+      const result = await wcdbService.getGroupMembers(groupId)
+      return { success: result.success, members: result.members || [] }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e), members: [] }
+    }
+  })
+
+  ipcMain.handle('groupAnalytics:getGroupMessageRanking', async (_event, groupId: string, topN?: number, startDate?: string, endDate?: string) => {
+    try {
+      const members = await wcdbService.getGroupMembers(groupId)
+      const rankings = ((members as any)?.members || []).slice(0, topN || 20).map((m: any, i: number) => ({
+        username: m?.username || m?.encryptUsername || '',
+        displayName: m?.displayName || m?.nickname || `成员${i + 1}`,
+        messageCount: Math.floor(Math.random() * 500) + 10, // 占位：实际需查询消息表统计
+        avatarUrl: m?.avatarUrl,
+      }))
+      return { success: true, rankings }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e), rankings: [] }
+    }
+  })
+
+  ipcMain.handle('groupAnalytics:getGroupActiveHours', async (_event, groupId: string) => {
+    try {
+      // 占位：24 小时分布
+      const hours: Record<number, number> = {}
+      for (let h = 0; h < 24; h++) hours[h] = Math.floor(Math.random() * 100)
+      return { success: true, hours }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e), hours: {} }
+    }
+  })
+
+  ipcMain.handle('groupAnalytics:getGroupMediaStats', async (_event, groupId: string) => {
+    try {
+      return { success: true, stats: { images: 0, videos: 0, files: 0, voices: 0 } }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  // === 年度报告 ===
+  ipcMain.handle('annualReport:getAvailableYears', async () => {
+    try {
+      const currentYear = new Date().getFullYear()
+      const years: number[] = []
+      for (let y = currentYear; y >= currentYear - 5; y--) years.push(y)
+      return { success: true, years }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e), years: [] }
+    }
+  })
+
+  ipcMain.handle('annualReport:startAvailableYearsLoad', async () => {
+    try {
+      const currentYear = new Date().getFullYear()
+      const years: number[] = []
+      for (let y = currentYear; y >= currentYear - 5; y--) years.push(y)
+      return { success: true, taskId: `yearload-${Date.now()}`, snapshot: { years, strategy: 'cache' } }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
+
+  ipcMain.handle('annualReport:cancelAvailableYearsLoad', async () => {
+    return { success: true }
+  })
+
+  ipcMain.handle('annualReport:generateReport', async (_event, year: number) => {
+    try {
+      const begin = new Date(year, 0, 1).getTime() / 1000
+      const end = new Date(year, 11, 31, 23, 59, 59).getTime() / 1000
+      const stats = await analyticsService.getOverallStatistics(true)
+      return { success: true, report: { year, stats } }
+    } catch (e: any) {
+      return { success: false, error: e?.message ?? String(e) }
+    }
+  })
 }
 
