@@ -147,9 +147,17 @@ export function registerBusinessIpcHandlers(): void {
 
   // autoGetImageKey 从微信目录提取图片解密密钥（XOR/AES）
   ipcMain.handle('key:autoGetImageKey', async (event, manualDir?: string, wxid?: string) => {
-    return keyService.autoGetImageKey(manualDir, (message: string) => {
+    const result = await keyService.autoGetImageKey(manualDir, (message: string) => {
       event.sender.send('key:imageKeyStatus', { message })
     }, wxid)
+    // 成功后自动保存到 config（snsService/imageDecryptService 会读取）
+    if (result.success && (result as any).xorKey !== undefined) {
+      try {
+        config.set('imageXorKey', (result as any).xorKey)
+        config.set('imageAesKey', (result as any).aesKey)
+      } catch {}
+    }
+    return result
   })
 
   // scanImageKeyFromMemory 通过内存扫描获取图片密钥（备用方案）

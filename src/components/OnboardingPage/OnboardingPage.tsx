@@ -226,6 +226,25 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
         selectedWxid.wxid
       )
       if (result?.success) {
+        // 连接成功后自动获取图片密钥（不阻塞，失败也不影响主流程）
+        try {
+          const imgKeyUnsub = window.electronAPI?.key?.onImageKeyStatus((payload) => {
+            // 可选：显示图片密钥进度
+            console.log('[Onboarding] 图片密钥进度:', payload)
+          })
+          const imgResult = await window.electronAPI?.key?.autoGetImageKey(
+            dbPath,
+            selectedWxid.wxid
+          )
+          imgKeyUnsub?.()
+          if (imgResult?.success) {
+            // 图片密钥已由后端写入 config，无需前端处理
+            console.log('[Onboarding] 图片密钥获取成功')
+          }
+        } catch {
+          // 图片密钥获取失败不影响数据库连接
+          console.warn('[Onboarding] 图片密钥获取失败，图片解密功能可能不可用')
+        }
         onComplete?.()
       } else {
         setKeyError(result?.error || '连接失败')
