@@ -10,7 +10,8 @@ const electronAPI = {
     getName: () => ipcRenderer.invoke('app:getName'),
     getUserDataPath: () => ipcRenderer.invoke('app:getUserDataPath'),
     getDownloadsPath: () => ipcRenderer.invoke('app:getDownloadsPath'),
-    getLogPath: () => ipcRenderer.invoke('app:getLogPath') as Promise<string>
+    getLogPath: () => ipcRenderer.invoke('app:getLogPath') as Promise<string>,
+    ensureImageKey: () => ipcRenderer.invoke('app:ensureImageKey') as Promise<{ success: boolean; configured: boolean; hasXor?: boolean; hasAes?: boolean; error?: string }>
   },
 
   // 主题控制

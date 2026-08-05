@@ -78,6 +78,20 @@ export function AppLayout() {
     setOnboardingDone(true)
   }
 
+  // 主界面就绪后：确保图片密钥已配置（缺失则后台自动从微信进程提取）
+  useEffect(() => {
+    if (onboardingChecking || !onboardingDone) return
+    let cancelled = false
+    window.electronAPI?.app?.ensureImageKey?.()
+      .then((r: any) => {
+        if (!cancelled && r && !r.configured) {
+          console.warn('[Lumina] 图片密钥未配置:', r?.error || '')
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [onboardingChecking, onboardingDone])
+
   // 正在检查 onboarding 状态：显示空白避免闪烁
   if (onboardingChecking) {
     return <div className="app-layout app-layout--loading" />

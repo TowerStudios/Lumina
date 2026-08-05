@@ -109,6 +109,34 @@ export function registerBusinessIpcHandlers(): void {
       config.set('decryptKey', hexKey)
       config.set('myWxid', wxid)
       config.set('onboardingDone', true)
+      // 连接成功后自动补获取图片密钥（若缺失）。微信需保持登录，wx_key.dll 从进程内存提取
+      try {
+        const keys = config.getImageKeysForCurrentWxid()
+        if (!keys.xorKey && !keys.aesKey) {
+          console.log('[ImageKey] 检测到图片密钥缺失，尝试自动获取...')
+          const keyResult = await keyService.autoGetImageKey(dbPath, (message: string) => {
+            console.log('[ImageKey] progress:', message)
+          }, wxid)
+          console.log('[ImageKey] autoGetImageKey 结果:', JSON.stringify({
+            success: keyResult.success,
+            hasXor: (keyResult as any).xorKey !== undefined,
+            hasAes: Boolean((keyResult as any).aesKey),
+            verified: (keyResult as any).verified,
+            error: keyResult.error || undefined
+          }))
+          if (keyResult.success && (keyResult as any).xorKey !== undefined) {
+            config.set('imageXorKey', (keyResult as any).xorKey)
+            config.set('imageAesKey', (keyResult as any).aesKey)
+            console.log('[ImageKey] 已保存到 config: xorKey=', (keyResult as any).xorKey, 'aesKey 长度=', String((keyResult as any).aesKey || '').length)
+          } else {
+            console.warn('[ImageKey] 自动获取失败:', keyResult.error || '未知原因')
+          }
+        } else {
+          console.log('[ImageKey] 图片密钥已存在, xorKey=', keys.xorKey, 'hasAes=', Boolean(keys.aesKey))
+        }
+      } catch (e: any) {
+        console.warn('[ImageKey] 补获取异常(不阻塞):', e?.message ?? String(e))
+      }
       return { success: true }
     } catch (e: any) {
       return { success: false, error: e?.message ?? String(e) }
@@ -450,6 +478,43 @@ export function registerBusinessIpcHandlers(): void {
 
   ipcMain.handle('app:getDownloadsPath', async () => {
     return app.getPath('downloads')
+  })
+
+  // 确保图片密钥已配置：缺失则自动从微信进程提取（wx_key.dll）
+  ipcMain.handle('app:ensureImageKey', async () => {
+    try {
+      const keys = config.getImageKeysForCurrentWxid()
+      if (keys.xorKey || keys.aesKey) {
+        return { success: true, configured: true, hasXor: Boolean(keys.xorKey), hasAes: Boolean(keys.aesKey) }
+      }
+      const dbPath = String(config.get('dbPath') || '')
+      const wxid = String(config.get('myWxid') || '')
+      if (!dbPath || !wxid) {
+        return { success: false, configured: false, error: '未配置数据库路径或微信ID' }
+      }
+      console.log('[ImageKey] 启动时检测到图片密钥缺失，尝试自动获取...')
+      const keyResult = await keyService.autoGetImageKey(dbPath, (message: string) => {
+        console.log('[ImageKey] progress:', message)
+      }, wxid)
+      console.log('[ImageKey] autoGetImageKey 结果:', JSON.stringify({
+        success: keyResult.success,
+        hasXor: (keyResult as any).xorKey !== undefined,
+        hasAes: Boolean((keyResult as any).aesKey),
+        verified: (keyResult as any).verified,
+        error: keyResult.error || undefined
+      }))
+      if (keyResult.success && (keyResult as any).xorKey !== undefined) {
+        config.set('imageXorKey', (keyResult as any).xorKey)
+        config.set('imageAesKey', (keyResult as any).aesKey)
+        console.log('[ImageKey] 已保存: xorKey=', (keyResult as any).xorKey, 'aesKey长度=', String((keyResult as any).aesKey || '').length)
+        return { success: true, configured: true, hasXor: true, hasAes: Boolean((keyResult as any).aesKey) }
+      }
+      console.warn('[ImageKey] 自动获取失败:', keyResult.error || '未知原因')
+      return { success: false, configured: false, error: keyResult.error || '获取失败' }
+    } catch (e: any) {
+      console.warn('[ImageKey] 异常:', e?.message ?? String(e))
+      return { success: false, configured: false, error: e?.message ?? String(e) }
+    }
   })
 
   // === 日志 ===

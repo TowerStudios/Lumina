@@ -112,6 +112,7 @@ export interface ElectronAPI {
     getUserDataPath: () => Promise<string>
     getDownloadsPath: () => Promise<string>
     getLogPath: () => Promise<string>
+    ensureImageKey: () => Promise<{ success: boolean; configured: boolean; hasXor?: boolean; hasAes?: boolean; error?: string }>
   }
 
   // 主题控制
