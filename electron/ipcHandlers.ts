@@ -169,8 +169,25 @@ export function registerBusinessIpcHandlers(): void {
 
   // === 聊天业务 ===
   ipcMain.handle('chat:connect', async () => {
-    await chatService.connect()
-    return { success: true }
+    const result = await chatService.connect()
+    // 连接成功后：若图片密钥缺失则自动补获取（wx_key.dll 已内置）
+    if (result.success) {
+      try {
+        const keys = config.getImageKeysForCurrentWxid()
+        if (!keys.xorKey && !keys.aesKey) {
+          const dbPath = String(config.get('dbPath') || '')
+          const wxid = String(config.get('myWxid') || '')
+          if (dbPath && wxid) {
+            const keyResult = await keyService.autoGetImageKey(dbPath, undefined, wxid)
+            if (keyResult.success && (keyResult as any).xorKey !== undefined) {
+              config.set('imageXorKey', (keyResult as any).xorKey)
+              config.set('imageAesKey', (keyResult as any).aesKey)
+            }
+          }
+        }
+      } catch { /* 图片密钥补获取失败不阻塞 */ }
+    }
+    return result
   })
 
   ipcMain.handle('chat:close', async () => {

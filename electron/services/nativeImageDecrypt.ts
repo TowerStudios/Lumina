@@ -63,11 +63,14 @@ function getAddonCandidates(): string[] {
   const platformDir = getPlatformDir()
   const archDir = getArchDir()
   const cwd = process.cwd()
+  // 支持两套命名：本项目命名 Lumina-* 与 WeFlow 迁移命名 weflow-*
   const fileNames = [
-    `Lumina-image-native-${platformDir}-${archDir}.node`
+    `Lumina-image-native-${platformDir}-${archDir}.node`,
+    `weflow-image-native-${platformDir}-${archDir}.node`
   ]
   const roots = [
     join(cwd, 'resources', 'wedecrypt', platformDir, archDir),
+    join(cwd, 'resources', 'image', platformDir, archDir),
     ...(process.resourcesPath
       ? [
           join(process.resourcesPath, 'resources', 'wedecrypt', platformDir, archDir),

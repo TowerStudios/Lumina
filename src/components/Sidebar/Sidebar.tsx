@@ -66,16 +66,24 @@ export function Sidebar({ collapsed }: { collapsed?: boolean }) {
     async function load() {
       try {
         const wxid = await window.electronAPI?.config?.get('myWxid')
-        const [contact, avatarUrl] = await Promise.all([
+        const [contact, avatarRes] = await Promise.all([
           wxid ? window.electronAPI?.chat?.getContact(String(wxid)) : Promise.resolve(null),
           window.electronAPI?.chat?.getMyAvatarUrl?.() ?? Promise.resolve(null),
         ])
         if (cancelled || seq !== loadSeq.current) return
+        // getMyAvatarUrl 返回 { success, avatarUrl }；可能还有旧缓存兜底
+        const avatarUrl =
+          (avatarRes as any)?.success && (avatarRes as any)?.avatarUrl
+            ? (avatarRes as any).avatarUrl
+            : (typeof avatarRes === 'string' && avatarRes)
+              ? avatarRes
+              : profile.avatarUrl || ''
+        const contactData = (contact as any)?.success ? (contact as any).data ?? (contact as any) : contact
         const p: UserProfile = {
           wxid: String(wxid || ''),
-          displayName: (contact as any)?.remark || (contact as any)?.nickname || (contact as any)?.displayName || '微信用户',
-          alias: (contact as any)?.alias || (contact as any)?.wechatId || (contact as any)?.username || '',
-          avatarUrl: typeof avatarUrl === 'string' ? avatarUrl : (profile.avatarUrl || ''),
+          displayName: contactData?.remark || contactData?.nickName || contactData?.nickname || contactData?.displayName || '微信用户',
+          alias: contactData?.alias || contactData?.wechatId || contactData?.username || '',
+          avatarUrl,
         }
         setProfile(p)
         try { localStorage.setItem(USER_CACHE_KEY, JSON.stringify(p)) } catch {}
