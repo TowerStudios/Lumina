@@ -242,6 +242,10 @@ export function registerBusinessIpcHandlers(): void {
     return chatService.getMyAvatarUrl()
   })
 
+  ipcMain.handle('chat:getMyWechatId', async () => {
+    return chatService.getMyWechatId()
+  })
+
   // 批量获取群聊成员数量（群聊会话展示 "N 名成员"）
   ipcMain.handle('chat:getGroupMemberCounts', async (_event, chatroomIds: string[]) => {
     try {

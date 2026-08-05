@@ -59,16 +59,17 @@ export function Sidebar({ collapsed }: { collapsed?: boolean }) {
   const menuRef = useRef<HTMLDivElement>(null)
   const loadSeq = useRef(0)
 
-  // 加载用户头像+昵称+wxid（并行 + 竞态控制）
+  // 加载用户头像+昵称+微信号+wxid（并行 + 竞态控制）
   useEffect(() => {
     const seq = ++loadSeq.current
     let cancelled = false
     async function load() {
       try {
         const wxid = await window.electronAPI?.config?.get('myWxid')
-        const [contact, avatarRes] = await Promise.all([
+        const [contact, avatarRes, wechatIdRes] = await Promise.all([
           wxid ? window.electronAPI?.chat?.getContact(String(wxid)) : Promise.resolve(null),
           window.electronAPI?.chat?.getMyAvatarUrl?.() ?? Promise.resolve(null),
+          window.electronAPI?.chat?.getMyWechatId?.() ?? Promise.resolve(null),
         ])
         if (cancelled || seq !== loadSeq.current) return
         // getMyAvatarUrl 返回 { success, avatarUrl }；可能还有旧缓存兜底
@@ -79,10 +80,17 @@ export function Sidebar({ collapsed }: { collapsed?: boolean }) {
               ? avatarRes
               : profile.avatarUrl || ''
         const contactData = (contact as any)?.success ? (contact as any).data ?? (contact as any) : contact
+        // 微信号：优先数据库 alias（ckbxxxx），回退联系人 alias
+        const wechatId =
+          (wechatIdRes as any)?.wechatId ||
+          contactData?.alias ||
+          contactData?.wechatId ||
+          contactData?.username ||
+          ''
         const p: UserProfile = {
           wxid: String(wxid || ''),
           displayName: contactData?.remark || contactData?.nickName || contactData?.nickname || contactData?.displayName || '微信用户',
-          alias: contactData?.alias || contactData?.wechatId || contactData?.username || '',
+          alias: wechatId,
           avatarUrl,
         }
         setProfile(p)

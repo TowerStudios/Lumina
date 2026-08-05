@@ -121,6 +121,7 @@ const electronAPI = {
     getContactAvatar: (username: string, chatroomId?: string) =>
       ipcRenderer.invoke('chat:getContactAvatar', username, chatroomId),
     getMyAvatarUrl: () => ipcRenderer.invoke('chat:getMyAvatarUrl'),
+    getMyWechatId: () => ipcRenderer.invoke('chat:getMyWechatId'),
     // 批量获取群聊成员数量
     getGroupMemberCounts: (chatroomIds: string[]) =>
       ipcRenderer.invoke('chat:getGroupMemberCounts', chatroomIds) as Promise<{

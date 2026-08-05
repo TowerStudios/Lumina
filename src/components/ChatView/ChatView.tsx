@@ -300,6 +300,11 @@ export function ChatView({ showBackButton, onBack }: ChatViewProps) {
 }
 
 // === 消息列表 ===
+// TG 风格浮动头像：头像显示在消息组最后一条消息旁，滚动时若组尾消息
+// 滚出可见区底部，头像吸附到可见区底部（enumerateUserpics 双钳制算法）
+const AVATAR_SIZE = 36
+const AVATAR_BOTTOM_SKIP = 10
+
 function MessageList({
   grouped,
   session,
@@ -307,18 +312,88 @@ function MessageList({
   grouped: GroupedMessage[]
   session: RenderSession
 }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const rowRefs = useRef(new Map<string, HTMLDivElement>())
+  const [floatYMap, setFloatYMap] = useState<Record<string, number>>({})
+
+  const computeFloats = useCallback(() => {
+    const container = containerRef.current
+    if (!container) return
+    const cRect = container.getBoundingClientRect()
+    const cTop = cRect.top
+    const cBottom = cRect.bottom
+    const next: Record<string, number> = {}
+    let groupLastId: string | null = null
+    let groupFirstTop = 0
+
+    for (const item of grouped) {
+      const el = rowRefs.current.get(item.message.id)
+      if (!el) continue
+      const rect = el.getBoundingClientRect()
+      if (item.position === 'first' || item.position === 'single') {
+        groupLastId = item.message.id
+        groupFirstTop = rect.top
+      } else if (item.position === 'last' && groupLastId) {
+        groupLastId = item.message.id
+      }
+      if (groupLastId && (item.position === 'last' || item.position === 'single')) {
+        // 组结束：TG enumerateUserpics 双钳制
+        const lastRect = rowRefs.current.get(groupLastId)?.getBoundingClientRect()
+        const lastTop = lastRect?.top ?? groupFirstTop
+        const lastBottom = lastRect?.bottom ?? lastTop + AVATAR_SIZE
+        let userpicBottom = Math.min(lastBottom, cBottom - AVATAR_BOTTOM_SKIP)
+        userpicBottom = Math.max(userpicBottom, groupFirstTop + AVATAR_SIZE)
+        const userpicTop = userpicBottom - AVATAR_SIZE
+        // 头像正常位置 = 组尾行顶部；offset 用于 transform 下移
+        const offset = userpicTop - lastTop
+        if (Math.abs(offset) > 1) next[groupLastId] = offset
+        groupLastId = null
+      }
+    }
+    setFloatYMap((prev) => {
+      let changed = false
+      const merged: Record<string, number> = {}
+      for (const k of Object.keys(prev)) if (!(k in next)) { changed = true; break }
+      for (const [k, v] of Object.entries(next)) if (prev[k] !== v) { changed = true; break }
+      if (!changed) return prev
+      for (const [k, v] of Object.entries(next)) merged[k] = v
+      return merged
+    })
+  }, [grouped])
+
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const handler = () => computeFloats()
+    container.addEventListener('scroll', handler, { passive: true })
+    window.addEventListener('resize', handler)
+    const raf = requestAnimationFrame(handler)
+    return () => {
+      container.removeEventListener('scroll', handler)
+      window.removeEventListener('resize', handler)
+      cancelAnimationFrame(raf)
+    }
+  }, [computeFloats])
+
+  const registerRow = useCallback((id: string) => (el: HTMLDivElement | null) => {
+    if (el) rowRefs.current.set(id, el)
+    else rowRefs.current.delete(id)
+  }, [])
+
   return (
-    <div className="message-list">
+    <div className="message-list" ref={containerRef}>
       {grouped.map((item, idx) => (
-        <MessageRow
-          key={`${item.message.id}-${idx}`}
-          item={item}
-          sessionAvatarColor={session.avatarColor}
-          sessionAvatarText={session.avatarText}
-          sessionAvatarUrl={session.avatarUrl}
-          isGroup={session.isGroup}
-          sessionId={session.id}
-        />
+        <div key={`${item.message.id}-${idx}`} ref={registerRow(item.message.id)}>
+          <MessageRow
+            item={item}
+            sessionAvatarColor={session.avatarColor}
+            sessionAvatarText={session.avatarText}
+            sessionAvatarUrl={session.avatarUrl}
+            isGroup={session.isGroup}
+            sessionId={session.id}
+            avatarFloatY={floatYMap[item.message.id] ?? 0}
+          />
+        </div>
       ))}
     </div>
   )
@@ -332,11 +407,16 @@ function MessageRow({
   sessionAvatarUrl,
   isGroup,
   sessionId,
+  avatarFloatY = 0,
 }: {
   item: GroupedMessage
   sessionAvatarColor: string
   sessionAvatarText: string
   sessionAvatarUrl?: string
+  isGroup: boolean
+  sessionId: string
+  /** TG 浮动头像垂直偏移（px，滚动时头像吸附可见区底部） */
+  avatarFloatY?: number
 }) {
   const {
     message: msg,
@@ -420,6 +500,7 @@ function MessageRow({
             className={`message-item__avatar message-item__avatar--other ${
               showAvatar ? 'message-item__avatar--visible' : 'message-item__avatar--placeholder'
             }`}
+            style={avatarFloatY ? { transform: `translateY(${avatarFloatY}px)` } : undefined}
             aria-hidden={!showAvatar}
           >
             {showAvatar ? (

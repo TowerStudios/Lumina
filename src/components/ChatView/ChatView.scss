@@ -353,6 +353,9 @@ $msg-radius-small: 6px;
     border-radius: 50%;
     overflow: hidden;
     user-select: none;
+    // TG 浮动头像：滚动时平滑下移吸附可见区底部
+    transition: transform 0.08s ease-out;
+    will-change: transform;
 
     &--placeholder {
       visibility: hidden;

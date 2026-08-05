@@ -8021,6 +8021,38 @@ class ChatService {
   }
 
   /**
+   * 获取当前用户微信号（alias，如 ckbxxxx），区别于 wxid
+   * 微信将个人信息存储在 Contact 表的 alias 字段（可能挂在 wxid / self 记录下）
+   */
+  async getMyWechatId(): Promise<{ success: boolean; wechatId?: string; error?: string }> {
+    try {
+      const connectResult = await this.ensureConnected()
+      if (!connectResult.success) {
+        return { success: false, error: connectResult.error }
+      }
+
+      const myWxid = this.configService.getMyWxidCleaned()
+      if (!myWxid) {
+        return { success: false, error: '未配置微信ID' }
+      }
+
+      const cleanedWxid = this.cleanAccountDirName(myWxid)
+      const fetchList = Array.from(new Set([myWxid, cleanedWxid, 'self']))
+
+      const result = await wcdbService.getContactAliasMap(fetchList)
+      if (result.success && result.map) {
+        const alias =
+          result.map[myWxid] || result.map[cleanedWxid] || result.map['self'] || ''
+        return { success: true, wechatId: alias || undefined }
+      }
+      return { success: true, wechatId: undefined }
+    } catch (e) {
+      console.error('ChatService: 获取当前用户微信号失败:', e)
+      return { success: false, error: String(e) }
+    }
+  }
+
+  /**
    * 获取表情包缓存目录
    */
   /**

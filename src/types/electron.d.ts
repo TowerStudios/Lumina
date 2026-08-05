@@ -184,6 +184,7 @@ export interface ElectronAPI {
     getContacts: (options?: { lite?: boolean }) => Promise<ContactsResult>
     getContactAvatar: (username: string, chatroomId?: string) => Promise<AvatarResult | string | null>
     getMyAvatarUrl: () => Promise<AvatarResult | null>
+    getMyWechatId: () => Promise<{ success: boolean; wechatId?: string; error?: string } | null>
     getGroupMemberCounts: (
       chatroomIds: string[]
     ) => Promise<{ success: boolean; map?: Record<string, number>; error?: string }>
