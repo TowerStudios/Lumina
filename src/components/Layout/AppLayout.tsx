@@ -35,6 +35,8 @@ export function AppLayout() {
   useWindowSizeSync()
 
   const activeSection = useUIStore((s) => s.activeSection)
+  const settingsOpen = useUIStore((s) => s.settingsOpen)
+  const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
   const [isMaximized, setIsMaximized] = useState(false)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
@@ -120,9 +122,6 @@ export function AppLayout() {
         return <PlaceholderPage title="Lumina" />
     }
   }
-
-  const settingsOpen = useUIStore((s) => s.settingsOpen)
-  const setSettingsOpen = useUIStore((s) => s.setSettingsOpen)
 
   return (
     <div className={`app-layout ${isMaximized ? 'app-layout--maximized' : ''}`}>
